@@ -143,6 +143,7 @@ async function main() {
   });
 
   const regenRegions = isRetry ? unionRegions(priorBugs) : undefined;
+  if (ctx.env.fixture_mode) await fixtureDelay(15);
   const copy = await generateCopy({
     plan: ctx.plan,
     template: template.id,
