@@ -213,7 +213,11 @@ async function runOnce(ctx: AgentContext): Promise<void> {
         passed: report.passed,
         failed: report.failed,
         bug_ids: bugs.map((b) => b.bug_id),
-        evidence_urls: mapped.map((m) => m.evidence_url),
+        evidence: mapped.map((m) => ({
+          bug_id: m.bug.bug_id,
+          loop_qa_bug_id: m.loop_qa_bug_id,
+          evidence_url: m.evidence_url,
+        })),
       },
     },
   );
