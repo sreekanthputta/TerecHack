@@ -45,7 +45,11 @@ Thumbs.db
 .claude/scratch/
 .claude/worktrees/
 
-# Fixture-mode runtime state
-state/
-memory/
+# Fixture-mode runtime state (repo-root + per-package runtime dirs, NOT source dirs)
+/state/
+/memory/
+packages/*/state/
+packages/*/memory/
+packages/agents/*/state/
+packages/agents/*/memory/
 autobiz.db
