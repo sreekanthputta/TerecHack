@@ -1,0 +1,40 @@
+{
+  "topic": "pricing",
+  "responses": [
+    {
+      "answer": "$19",
+      "reasoning": "Feels like an impulse buy at that price.",
+      "respondent_id": "r_101"
+    },
+    {
+      "answer": "$25",
+      "reasoning": "Sweet spot: cheap enough to try, not a red flag.",
+      "respondent_id": "r_102"
+    },
+    {
+      "answer": "$29",
+      "reasoning": "Would need slightly more perceived value at this price.",
+      "respondent_id": "r_103"
+    },
+    {
+      "answer": "$19",
+      "reasoning": "$20 is my mental checkpoint for a new gadget.",
+      "respondent_id": "r_104"
+    },
+    {
+      "answer": "$25",
+      "reasoning": "Comparable products live in this range.",
+      "respondent_id": "r_105"
+    },
+    {
+      "answer": "$22",
+      "reasoning": "Something ending in a 2 or 4 feels more honest than 29.",
+      "respondent_id": "r_106"
+    },
+    {
+      "answer": "$25",
+      "reasoning": "Would gift at this price.",
+      "respondent_id": "r_107"
+    }
+  ]
+}

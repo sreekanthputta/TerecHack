@@ -1,0 +1,30 @@
+{
+  "topic": "default",
+  "responses": [
+    {
+      "answer": "Yes",
+      "reasoning": "Would try if the price is right and shipping is fast.",
+      "respondent_id": "r_001"
+    },
+    {
+      "answer": "Yes",
+      "reasoning": "Aesthetic matches my current setup.",
+      "respondent_id": "r_002"
+    },
+    {
+      "answer": "Maybe",
+      "reasoning": "Depends on brand recognition and reviews.",
+      "respondent_id": "r_003"
+    },
+    {
+      "answer": "No",
+      "reasoning": "Already have something similar.",
+      "respondent_id": "r_004"
+    },
+    {
+      "answer": "Yes",
+      "reasoning": "Solves a real problem for me.",
+      "respondent_id": "r_005"
+    }
+  ]
+}
