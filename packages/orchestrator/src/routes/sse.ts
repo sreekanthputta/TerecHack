@@ -17,11 +17,18 @@ export async function registerSseRoutes(app: FastifyInstance, ctx: Ctx): Promise
     const lastIdHeader = req.headers["last-event-id"];
     const lastEventId = Number(Array.isArray(lastIdHeader) ? lastIdHeader[0] : lastIdHeader ?? "0") || 0;
 
+    // reply.hijack() + raw.writeHead bypasses the @fastify/cors plugin's
+    // onSend hook, so CORS headers must be written here or EventSource in
+    // the browser rejects the stream. Mirror the plugin's allow-all policy.
+    const reqOrigin = req.headers.origin;
     reply.raw.writeHead(200, {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
       "X-Accel-Buffering": "no",
+      "Access-Control-Allow-Origin": reqOrigin ?? "*",
+      "Access-Control-Allow-Credentials": "true",
+      Vary: "Origin",
     });
     reply.hijack();
 
