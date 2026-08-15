@@ -1,48 +1,39 @@
-import { AgentContextSchema, type TraceEventInput } from "@autobiz/shared";
-
-const AGENT = "researcher" as const;
-
-async function readStdin(): Promise<string> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
-  return Buffer.concat(chunks).toString("utf8");
-}
-
-async function postEvent(orchUrl: string, turnId: string, event: TraceEventInput) {
-  const res = await fetch(`${orchUrl}/internal/turns/${turnId}/events`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(event),
-  });
-  if (!res.ok) throw new Error(`POST event failed: ${res.status}`);
-}
+import { AgentContextSchema } from "@autobiz/shared";
+import { readEnv } from "./config.js";
+import { runFixtureFlow } from "./fixture.js";
+import { LLM } from "./llm.js";
+import { baseFrom, makeEmitter, makeMemoryWriter } from "./orch.js";
+import { runRealFlow } from "./real.js";
+import { readStdin } from "./stdin.js";
+import { Superserve } from "./superserve.js";
 
 async function main() {
   const raw = await readStdin();
   const ctx = AgentContextSchema.parse(JSON.parse(raw));
-  const orchUrl = ctx.env.orchestrator_url;
-  const nowIso = () => new Date().toISOString();
+  const env = readEnv(ctx);
+  const emit = makeEmitter(env.orchUrl, env.turnId, baseFrom(ctx));
+  const writeMemory = makeMemoryWriter(env.orchUrl, env.turnId);
 
-  const base = {
-    project_id: ctx.project_id,
-    turn: ctx.turn,
-    agent: AGENT,
-    agent_run_id: ctx.agent_run_id,
-  } as const;
+  if (env.fixtureMode) {
+    await runFixtureFlow(ctx, emit, writeMemory);
+    return;
+  }
 
-  await postEvent(orchUrl, ctx.turn_id, {
-    ...base,
-    type: "thought",
-    content: `[stub] ${AGENT} received context for project ${ctx.project_id}`,
-    ts: nowIso(),
-  });
+  if (!env.anthropicApiKey) {
+    await emit({
+      type: "error",
+      content: `researcher: ANTHROPIC_API_KEY not set — cannot run real mode`,
+    });
+    process.exit(1);
+  }
 
-  await postEvent(orchUrl, ctx.turn_id, {
-    ...base,
-    type: "result",
-    content: `[stub] ${AGENT} finished. Real implementation lives in this worktree's PRD.`,
-    ts: nowIso(),
-  });
+  const browser = new Superserve(env.intUrl);
+  const llm = new LLM(env.anthropicApiKey);
+  try {
+    await runRealFlow({ ctx, emit, writeMemory, llm, browser });
+  } finally {
+    await browser.close();
+  }
 }
 
 main().catch((err) => {
