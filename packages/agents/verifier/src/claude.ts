@@ -42,7 +42,7 @@ function extractJson(text: string): string | undefined {
   if (!text) return undefined;
   // Strip ```json fences if present.
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const candidate = fenced ? fenced[1] : text;
+  const candidate = fenced?.[1] ?? text;
   const start = candidate.indexOf("{");
   const end = candidate.lastIndexOf("}");
   if (start === -1 || end === -1 || end <= start) return undefined;
