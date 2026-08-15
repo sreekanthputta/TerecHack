@@ -35,6 +35,11 @@ async function main() {
   });
 
   const template = pickTemplate(ctx.plan);
+  await orch.event({
+    type: "action",
+    content: `chose template "${template.id}" (${template.reason})`,
+    metadata: { template: template.id, sku_count: template.sku_count },
+  });
 
   await orch.event({
     type: "result",
