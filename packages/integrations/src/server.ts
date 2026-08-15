@@ -10,6 +10,7 @@ import { registerSuperserveRoutes } from "./routes/superserve.js";
 import { registerReplayRoutes } from "./routes/replay.js";
 import { registerShopifyRoutes } from "./routes/shopify.js";
 import { startBackgroundCache } from "./cache.js";
+import { warmPool } from "./clients/superserve.js";
 
 export async function buildApp() {
   assertBootSafety();
@@ -56,6 +57,7 @@ async function main() {
     "integrations listening",
   );
   startBackgroundCache();
+  void warmPool();
 }
 
 const isEntry = import.meta.url === `file://${process.argv[1]}`;
