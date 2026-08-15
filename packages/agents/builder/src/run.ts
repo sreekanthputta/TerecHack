@@ -2,6 +2,7 @@ import { AgentContextSchema, type AgentContext } from "@autobiz/shared";
 import { OrchClient } from "./orch.js";
 import { pickTemplate } from "./template.js";
 import { generateCopy } from "./content.js";
+import { renderTemplate, slugify } from "./templates.js";
 
 const AGENT = "builder" as const;
 
@@ -51,6 +52,19 @@ async function main() {
   await orch.event({
     type: "thought",
     content: `generated copy: "${copy.hero}" (${copy.products.length} products)`,
+  });
+
+  const slug = slugify(`${copy.brand_name}-${ctx.project_id}`);
+  const html = renderTemplate({
+    template: template.id,
+    copy,
+    slug,
+    payment_url: "https://buy.stripe.com/pending",
+  });
+  await orch.event({
+    type: "action",
+    content: `rendered ${html.length} bytes of HTML`,
+    metadata: { bytes: html.length, template: template.id },
   });
 
   await orch.event({
