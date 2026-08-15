@@ -40,7 +40,11 @@ async function createPaymentLink(opts: {
       });
       return { url: fallback, id: "pl_demo_fallback" };
     }
-    throw err;
+    await opts.orch.event({
+      type: "error",
+      content: `stripe unavailable, shipping with placeholder link: ${(err as Error).message}`,
+    });
+    return { url: "https://buy.stripe.com/unavailable", id: "pl_unavailable" };
   }
 }
 
