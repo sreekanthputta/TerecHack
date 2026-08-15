@@ -1,0 +1,15 @@
+{
+  "project": {
+    "id": "lqa-01HXDEMO",
+    "dashboard_url": "https://qa.replay.io/projects/fixture-run-1",
+    "exploration_id": "exp-01HXDEMO-2"
+  },
+  "status": {
+    "done": true,
+    "journeys_covered": 17,
+    "journeys_passed_count": 17,
+    "journeys_failed_count": 0,
+    "explored_at": "2026-08-15T18:10:00.000Z"
+  },
+  "bugs": []
+}

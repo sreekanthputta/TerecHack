@@ -1,0 +1,46 @@
+{
+  "project": {
+    "id": "lqa-01HXDEMO",
+    "dashboard_url": "https://qa.replay.io/projects/fixture-run-1",
+    "exploration_id": "exp-01HXDEMO-1"
+  },
+  "status": {
+    "done": true,
+    "journeys_covered": 17,
+    "journeys_passed_count": 15,
+    "journeys_failed_count": 2,
+    "explored_at": "2026-08-15T18:00:00.000Z"
+  },
+  "bugs": [
+    {
+      "loop_qa_bug_id": "lqa-bug-101",
+      "severity": "blocker",
+      "route": "/api/cart",
+      "component": "CartService",
+      "finding_summary": "Add-to-cart for SKU-2 returns HTTP 404",
+      "expected_behavior": "Add-to-cart should return HTTP 200 with the new cart line item",
+      "repro_steps": [
+        "Load the storefront home page at /",
+        "Click the SKU-2 tile to open its detail page",
+        "Click the 'Add to cart' button",
+        "Observe the /api/cart POST returns 404 in the network panel"
+      ],
+      "evidence_url": "https://qa.replay.io/recordings/fixture-run-1-bug-101"
+    },
+    {
+      "loop_qa_bug_id": "lqa-bug-102",
+      "severity": "major",
+      "route": "/checkout",
+      "component": "CheckoutMobile",
+      "finding_summary": "Mobile checkout (390×844) does not render the total price line",
+      "expected_behavior": "The total price should be visible above the Stripe pay button on mobile",
+      "repro_steps": [
+        "Resize the viewport to 390×844",
+        "Add any SKU to the cart",
+        "Click 'Checkout'",
+        "Observe the total price row is missing from the mobile checkout summary"
+      ],
+      "evidence_url": "https://qa.replay.io/recordings/fixture-run-1-bug-102"
+    }
+  ]
+}
