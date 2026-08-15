@@ -2,15 +2,18 @@ import { AgentContextSchema, type TraceEventInput } from "@autobiz/shared";
 import { IntClient, OrchClient } from "./http.js";
 import { fixtureHealth, fixtureLogs } from "./fixtures.js";
 import { toTick, type HealthReading } from "./health.js";
+import { detect, sortBySeverity, toBugReport } from "./anomalies.js";
 import { scan, totalErrors, type LogCluster } from "./logs.js";
 import { renderUptimeMd } from "./memory.js";
 import {
   appendTick,
   errorsLast5m,
+  hasRecentSynthHash,
   loadState,
   p95,
   pruneSynthHashes,
   recentTicks,
+  recordSynthHash,
   saveState,
   uptimePct,
 } from "./state.js";
@@ -133,6 +136,79 @@ async function main() {
       content: `state patch failed: ${(err as Error).message}`,
       ts: nowIso(),
     });
+  }
+
+  const anomalies = sortBySeverity(
+    detect({
+      reading,
+      clusters,
+      window,
+      uptimePct: uptime,
+      p95Ms: p95Latency,
+      errors5m,
+    }),
+  );
+
+  const fresh = anomalies.filter((a) => !hasRecentSynthHash(state, a.hash));
+  for (const a of fresh) {
+    state = recordSynthHash(state, a.hash, nowIso());
+  }
+
+  if (fresh.length > 0) {
+    const report = toBugReport({
+      projectId: ctx.project_id,
+      runId: ctx.agent_run_id,
+      builderVersion: ctx.plan.version,
+      anomalies: fresh,
+    });
+    try {
+      await orch.postBugs(report);
+      await emit({
+        type: "bugs_found",
+        content: `${fresh.length} anomaly bug(s) posted: ${fresh.map((a) => a.severity).join(",")}`,
+        ts: nowIso(),
+        metadata: { bug_ids: report.bugs.map((b) => b.bug_id) },
+      });
+    } catch (err) {
+      await emit({
+        type: "error",
+        content: `bug report failed: ${(err as Error).message}`,
+        ts: nowIso(),
+      });
+    }
+
+    const critical = fresh.find((a) => a.criticalOutage);
+    if (critical && !state.linq_notified_at) {
+      try {
+        const int = new IntClient(ctx.env.integrations_url);
+        await int.linqNotify({
+          project_id: ctx.project_id,
+          channel: ctx.plan.owner_contact.channel,
+          address: ctx.plan.owner_contact.address,
+          message: `Outage on ${ctx.plan.goal}: ${critical.observed}`,
+        });
+        state.linq_notified_at = nowIso();
+        await emit({
+          type: "action",
+          content: `linq notify owner via ${ctx.plan.owner_contact.channel}`,
+          ts: nowIso(),
+        });
+      } catch (err) {
+        await emit({
+          type: "error",
+          content: `linq notify failed: ${(err as Error).message}`,
+          ts: nowIso(),
+        });
+      }
+    } else if (!critical) {
+      // Reset the outage-notify latch once we're back below blocker severity
+      // so a future outage can page again.
+      state.linq_notified_at = null;
+    }
+  } else {
+    // No fresh anomalies this tick — if the previous outage has cleared, reset
+    // the latch so the next incident can page.
+    if (reading.status === "healthy") state.linq_notified_at = null;
   }
 
   try {
