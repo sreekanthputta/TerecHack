@@ -1,5 +1,6 @@
 import { AgentContextSchema } from "@autobiz/shared";
 import { readEnv } from "./config.js";
+import { runFixtureFlow } from "./fixture.js";
 import { baseFrom, makeEmitter, makeMemoryWriter } from "./orch.js";
 import { readStdin } from "./stdin.js";
 
@@ -10,18 +11,20 @@ async function main() {
   const emit = makeEmitter(env.orchUrl, env.turnId, baseFrom(ctx));
   const writeMemory = makeMemoryWriter(env.orchUrl, env.turnId);
 
+  if (env.fixtureMode) {
+    await runFixtureFlow(ctx, emit, writeMemory);
+    return;
+  }
+
+  // Real flow is added in the next commits (LLM plan-of-inquiry + Superserve).
   await emit({
     type: "thought",
     content: `researcher received context for project ${ctx.project_id}, goal "${ctx.plan.goal}"`,
   });
-
-  // TODO: real vs fixture flow lands in follow-up commits.
-  void writeMemory;
-
   await emit({
     type: "result",
-    content: `researcher stub — real flow lands next commit`,
-    confidence: 0.5,
+    content: `researcher: real-mode flow not yet implemented in this build`,
+    confidence: 0.4,
   });
 }
 

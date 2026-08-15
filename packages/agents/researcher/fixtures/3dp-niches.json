@@ -1,0 +1,47 @@
+{
+  "sources": [
+    {
+      "slug": "etsy-cable-organizers",
+      "title": "Etsy · cable organizers 3D printed",
+      "url": "https://www.etsy.com/search?q=3d+printed+cable+organizer&order=most_relevant",
+      "summary": "3D-printed cable organizers dominate the top-10 grid: 40+ shops with 200-800 sales, most listings $8–$15. Popular styles: minimalist desk clip, headphone cradle, monitor-back clip.",
+      "evidence": "Top 10 listings avg 250 sales; median price $12; five shops shipping in <2 days."
+    },
+    {
+      "slug": "etsy-cord-keepers",
+      "title": "Etsy · cord keeper competitors",
+      "url": "https://www.etsy.com/market/cord_keeper",
+      "summary": "Cord keepers overlap category. Prices $10–$18. Reviews cite 'stronger than store-bought' and 'matches my desk'.",
+      "evidence": "3 shops with 1000+ sales; repeat-buyer language in reviews."
+    },
+    {
+      "slug": "reddit-r-3dprinting-idle",
+      "title": "r/3Dprinting · idle printer money threads",
+      "url": "https://www.reddit.com/r/3Dprinting/search/?q=make+money+idle+printer",
+      "summary": "Community consensus: functional small items (organizers, brackets) outsell novelty prints. Cable/cord products cited repeatedly.",
+      "evidence": "Threads from last 90 days; 3 with >200 upvotes recommending cable organizers as first product."
+    }
+  ],
+  "candidates": [
+    {
+      "name": "cable organizers",
+      "evidence": "40+ shops in top grid; median $12; strong review sentiment; recommended in community threads.",
+      "price_range": [10, 15],
+      "monthly_sales_est": 200
+    },
+    {
+      "name": "cord keepers",
+      "evidence": "Overlapping category; higher price band but slower turnover.",
+      "price_range": [10, 18],
+      "monthly_sales_est": 120
+    },
+    {
+      "name": "headphone stands",
+      "evidence": "Popular but crowded — top shops have 5000+ sales, high competition for new entrants.",
+      "price_range": [15, 25],
+      "monthly_sales_est": 90
+    }
+  ],
+  "top_pick": "cable organizers",
+  "confidence": 0.5
+}
