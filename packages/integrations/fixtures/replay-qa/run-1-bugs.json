@@ -1,0 +1,34 @@
+{
+  "bugs": [
+    {
+      "id": "b_fx_101",
+      "severity": "blocker",
+      "title": "Add-to-cart returns 404 for SKU-2 (cable-organizer-3pk)",
+      "route": "/api/cart",
+      "evidence_url": "https://qa.replay.io/recordings/fx-101",
+      "observed": "POST /api/cart with SKU-2 responds 404 {error:'unknown sku'}",
+      "expected": "POST /api/cart with SKU-2 responds 200 with the cart line added",
+      "repro": [
+        "Open /product/cable-organizer-3pk",
+        "Click Add to Cart",
+        "Observe the toast: 'Something went wrong'",
+        "Network tab shows POST /api/cart -> 404"
+      ]
+    },
+    {
+      "id": "b_fx_102",
+      "severity": "major",
+      "title": "Stripe payment link opens in same tab, losing site state",
+      "route": "/checkout",
+      "evidence_url": "https://qa.replay.io/recordings/fx-102",
+      "observed": "Anchor to buy.stripe.com uses default target — same tab",
+      "expected": "target='_blank' or a return_url so shoppers can come back",
+      "repro": [
+        "Add SKU-1 to cart",
+        "Go to /checkout",
+        "Click Pay",
+        "You land on Stripe with no way back"
+      ]
+    }
+  ]
+}
