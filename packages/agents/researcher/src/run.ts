@@ -1,8 +1,11 @@
 import { AgentContextSchema } from "@autobiz/shared";
 import { readEnv } from "./config.js";
 import { runFixtureFlow } from "./fixture.js";
+import { LLM } from "./llm.js";
 import { baseFrom, makeEmitter, makeMemoryWriter } from "./orch.js";
+import { runRealFlow } from "./real.js";
 import { readStdin } from "./stdin.js";
+import { Superserve } from "./superserve.js";
 
 async function main() {
   const raw = await readStdin();
@@ -16,16 +19,21 @@ async function main() {
     return;
   }
 
-  // Real flow is added in the next commits (LLM plan-of-inquiry + Superserve).
-  await emit({
-    type: "thought",
-    content: `researcher received context for project ${ctx.project_id}, goal "${ctx.plan.goal}"`,
-  });
-  await emit({
-    type: "result",
-    content: `researcher: real-mode flow not yet implemented in this build`,
-    confidence: 0.4,
-  });
+  if (!env.anthropicApiKey) {
+    await emit({
+      type: "error",
+      content: `researcher: ANTHROPIC_API_KEY not set — cannot run real mode`,
+    });
+    process.exit(1);
+  }
+
+  const browser = new Superserve(env.intUrl);
+  const llm = new LLM(env.anthropicApiKey);
+  try {
+    await runRealFlow({ ctx, emit, writeMemory, llm, browser });
+  } finally {
+    await browser.close();
+  }
 }
 
 main().catch((err) => {
