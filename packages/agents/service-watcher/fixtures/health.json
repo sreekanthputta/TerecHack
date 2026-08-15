@@ -1,0 +1,7 @@
+[
+  { "status": "healthy", "latency_ms": 180, "errors": 0 },
+  { "status": "healthy", "latency_ms": 205, "errors": 0 },
+  { "status": "healthy", "latency_ms": 175, "errors": 0 },
+  { "status": "degraded", "latency_ms": 4200, "errors": 14 },
+  { "status": "healthy", "latency_ms": 220, "errors": 0 }
+]
