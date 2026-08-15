@@ -45,13 +45,6 @@ export async function registerInternalRoutes(app: FastifyInstance, ctx: Ctx): Pr
       return { error: "project_mismatch" };
     }
     const ev = ctx.recordEvent(parsed.data);
-
-    if (parsed.data.confidence !== undefined && parsed.data.confidence < 0.6) {
-      const plan = ctx.repo.getLatestPlan(turn.project_id);
-      if (plan && ctx.scheduler) {
-        ctx.scheduler.spawnVerifier(turn.project_id, plan, listPluginConfigs(ctx.repo));
-      }
-    }
     return { id: ev.id };
   });
 

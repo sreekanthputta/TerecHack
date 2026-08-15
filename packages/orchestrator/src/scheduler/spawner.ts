@@ -1,11 +1,12 @@
 import { spawn as nodeSpawn, type ChildProcess } from "node:child_process";
-import { createWriteStream, mkdirSync, existsSync, readFileSync } from "node:fs";
+import { createWriteStream, mkdirSync, existsSync } from "node:fs";
 import { dirname, resolve, join } from "node:path";
 import { randomUUID } from "node:crypto";
 import type { Logger } from "pino";
 import type { AgentContext, AgentName, BusinessPlan, PluginConfig, Bug } from "@autobiz/shared";
 import type { Ctx } from "../app.js";
 import { listMemoryPathsForContext } from "../memory/fs.js";
+import { runFixtureScript } from "../fixtures/scripts.js";
 
 /**
  * Spawns agents. In FIXTURE_MODE the spawner never touches child_process —
@@ -127,7 +128,15 @@ export class Spawner {
     });
 
     if (this.ctx.env.fixture_mode) {
-      const onDone = this.runFixture(input.project_id, input.agent, input.turn, agent_run_id, turn_id);
+      const onDone = this.runFixture({
+        project_id: input.project_id,
+        agent: input.agent,
+        turn: input.turn,
+        agent_run_id,
+        turn_id,
+        prior_bugs: input.extras?.prior_bugs ?? [],
+        messages: input.extras?.messages ?? [],
+      });
       return { turn_id, agent: input.agent, agent_run_id, onDone };
     }
 
@@ -188,48 +197,25 @@ export class Spawner {
   }
 
   /**
-   * Fixture mode: replay canned events. Reads fixtures/traces/demo-<agent>.jsonl
-   * if present, otherwise reads demo-3dprint.jsonl and filters to this agent's rows.
+   * Fixture mode: run in-process scripted stubs. Since the worktree cannot write
+   * to fixtures/agents/, we embed per-agent scripts in src/fixtures/scripts.ts.
    */
-  private async runFixture(
-    project_id: string,
-    agent: AgentName,
-    turn: number,
-    agent_run_id: string,
-    turn_id: string,
-  ): Promise<"done" | "error"> {
+  private async runFixture(input: {
+    project_id: string;
+    agent: AgentName;
+    turn: number;
+    agent_run_id: string;
+    turn_id: string;
+    prior_bugs: Bug[];
+    messages: string[];
+  }): Promise<"done" | "error"> {
     try {
-      const path = fixtureTracePath(this.repoRoot);
-      if (!existsSync(path)) {
-        this.logger.warn({ path }, "fixture trace missing; agent runs no-op");
-        this.ctx.repo.endTurn(turn_id, "done");
-        return "done";
-      }
-      const lines = readFileSync(path, "utf8").split("\n").filter(Boolean);
-      for (const ln of lines) {
-        const raw = JSON.parse(ln) as {
-          agent: AgentName; type: string; content: string; confidence?: number; metadata?: Record<string, unknown>;
-        };
-        if (raw.agent !== agent) continue;
-        const ts = new Date().toISOString();
-        this.ctx.recordEvent({
-          project_id,
-          turn,
-          agent,
-          agent_run_id,
-          type: raw.type as never,
-          content: raw.content,
-          ts,
-          ...(raw.confidence !== undefined ? { confidence: raw.confidence } : {}),
-          ...(raw.metadata ? { metadata: raw.metadata } : {}),
-        });
-        await new Promise((r) => setTimeout(r, 40));
-      }
-      this.ctx.repo.endTurn(turn_id, "done");
+      await runFixtureScript(this.ctx, input);
+      this.ctx.repo.endTurn(input.turn_id, "done");
       return "done";
     } catch (err) {
-      this.logger.error({ err: String(err) }, "fixture replay failed");
-      this.ctx.repo.endTurn(turn_id, "error");
+      this.logger.error({ err: String(err), agent: input.agent }, "fixture script failed");
+      this.ctx.repo.endTurn(input.turn_id, "error");
       return "error";
     }
   }
@@ -246,6 +232,3 @@ function findRepoRoot(): string {
   return process.cwd();
 }
 
-function fixtureTracePath(repoRoot: string): string {
-  return join(repoRoot, "fixtures", "traces", "demo-3dprint.jsonl");
-}

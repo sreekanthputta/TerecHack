@@ -7,6 +7,7 @@ import { rootLogger } from "./logger.js";
 import { env, type Env } from "./env.js";
 import type { Spawner } from "./scheduler/spawner.js";
 import type { TurnScheduler } from "./scheduler/turn_scheduler.js";
+import { listPluginConfigs } from "./plugins/service.js";
 
 /**
  * Central runtime dependencies. Handlers pull these from `app.ctx` — no
@@ -34,6 +35,24 @@ export function createCtx(db: Database.Database): Ctx {
     recordEvent: (input) => {
       const ev = repo.insertEvent(input);
       bus.publish(ev);
+      // Auto-spawn verifier on low-confidence signals from non-verifier agents.
+      // Single point of truth — internal REST route does not need to duplicate.
+      if (
+        ctx.scheduler &&
+        input.confidence !== undefined &&
+        input.confidence < 0.6 &&
+        input.agent !== "verifier" &&
+        input.agent !== "orchestrator"
+      ) {
+        const plan = repo.getLatestPlan(input.project_id);
+        if (plan) {
+          try {
+            ctx.scheduler.spawnVerifier(input.project_id, plan, listPluginConfigs(repo));
+          } catch (err) {
+            rootLogger.error({ err: String(err) }, "verifier auto-spawn failed");
+          }
+        }
+      }
       return ev;
     },
   };
