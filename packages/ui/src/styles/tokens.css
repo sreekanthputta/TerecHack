@@ -582,3 +582,65 @@ input[type="password"] {
 .faq-item:last-child {
   border-bottom: 1px solid var(--border);
 }
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-border {
+  position: relative;
+  border-radius: 14px;
+}
+
+.shimmer-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 14px;
+  padding: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(16, 185, 129, 0) 0%,
+    rgba(16, 185, 129, 0.9) 40%,
+    rgba(16, 185, 129, 0) 80%
+  );
+  background-size: 200% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: shimmer 1.6s ease-in-out 200ms 1 both;
+  pointer-events: none;
+}
+
+.qr-grid {
+  display: grid;
+  grid-template-columns: repeat(21, 1fr);
+  gap: 1px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--surface-3);
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.qr-grid > span {
+  background: transparent;
+}
+
+.qr-grid > span.on {
+  background: white;
+}
+
+.pivot-banner {
+  background: linear-gradient(
+    90deg,
+    rgba(139, 92, 246, 0.10),
+    rgba(139, 92, 246, 0.02)
+  );
+  border-color: rgba(139, 92, 246, 0.25);
+}
