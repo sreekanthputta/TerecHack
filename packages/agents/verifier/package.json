@@ -1,0 +1,23 @@
+{
+  "name": "@autobiz/agent-verifier",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "autobiz-verifier": "./dist/run.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/run.js",
+    "demo": "FIXTURE_MODE=true TURN_ID=demo INT_URL=http://localhost:4100 ORCH_URL=http://localhost:4000 node dist/run.js < ../../../fixtures/contexts/verifier.json",
+    "test:contracts": "vitest run --dir ../../../tests/contracts verifier.contract.test.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.28.0",
+    "@autobiz/shared": "workspace:*",
+    "pino": "^9.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.2"
+  }
+}

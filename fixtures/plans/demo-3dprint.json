@@ -1,0 +1,23 @@
+{
+  "project_id": "01HXDEMO3DPRINT000000000000",
+  "version": 1,
+  "goal": "3D printer sitting idle for a month — make me money.",
+  "vertical": "print-on-demand",
+  "agents": [
+    { "role": "researcher", "task": "Find trending 3D-printable products on Etsy under $30" },
+    { "role": "verifier", "task": "Validate top 5 niches with Terac maker panel" },
+    { "role": "builder", "task": "Ship a Shopify-lite storefront on Render with 5 SKUs" },
+    { "role": "replay-qa", "task": "AI-QA the storefront before flipping live" },
+    { "role": "revenue-watcher", "task": "Tail Stripe every 30s" },
+    { "role": "service-watcher", "task": "Tail uptime + logs every 60s" }
+  ],
+  "budget_usd": 200,
+  "terac_studies_planned": [
+    { "topic": "niche-validation", "audience": "expert:makers", "when": "before-build" },
+    { "topic": "pricing", "audience": "general", "when": "post-mvp" }
+  ],
+  "owner_contact": {
+    "channel": "imessage",
+    "address": "+15555550100"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "turn_id": "turn-build-v1-0003",
+  "project_id": "01HXDEMO3DPRINT000000000000",
+  "turn": 3,
+  "agent": "builder",
+  "agent_run_id": "00000000-0000-4000-8000-000000000003",
+  "plan": {
+    "project_id": "01HXDEMO3DPRINT000000000000",
+    "version": 1,
+    "goal": "3D printer sitting idle for a month — make me money.",
+    "vertical": "print-on-demand",
+    "agents": [
+      { "role": "builder", "task": "Ship a Shopify-lite storefront on Render with 5 SKUs" }
+    ],
+    "budget_usd": 200,
+    "terac_studies_planned": [],
+    "owner_contact": { "channel": "imessage", "address": "+15555550100" }
+  },
+  "messages": [],
+  "memory": {
+    "workspace": ["workspace/owner_profile.md"],
+    "project": [
+      "projects/01HXDEMO/plan.md",
+      "projects/01HXDEMO/research/competitors.md",
+      "projects/01HXDEMO/decisions/n8x2p9zk.md"
+    ]
+  },
+  "plugin_configs": [],
+  "env": {
+    "integrations_url": "http://localhost:4100",
+    "orchestrator_url": "http://localhost:4000",
+    "fixture_mode": true
+  }
+}

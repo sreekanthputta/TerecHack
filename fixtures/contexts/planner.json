@@ -1,0 +1,25 @@
+{
+  "turn_id": "turn-plan-0000",
+  "project_id": "01HXDEMO3DPRINT000000000000",
+  "turn": 0,
+  "agent": "planner",
+  "agent_run_id": "00000000-0000-4000-8000-000000000001",
+  "plan": {
+    "project_id": "01HXDEMO3DPRINT000000000000",
+    "version": 1,
+    "goal": "3D printer sitting idle for a month — make me money.",
+    "vertical": "print-on-demand",
+    "agents": [],
+    "budget_usd": 200,
+    "terac_studies_planned": [],
+    "owner_contact": { "channel": "imessage", "address": "+15555550100" }
+  },
+  "messages": ["3D printer sitting idle for a month — make me money."],
+  "memory": { "workspace": [], "project": [] },
+  "plugin_configs": [],
+  "env": {
+    "integrations_url": "http://localhost:4100",
+    "orchestrator_url": "http://localhost:4000",
+    "fixture_mode": true
+  }
+}

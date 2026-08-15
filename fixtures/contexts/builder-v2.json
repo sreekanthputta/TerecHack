@@ -1,0 +1,52 @@
+{
+  "turn_id": "turn-build-v2-0005",
+  "project_id": "01HXDEMO3DPRINT000000000000",
+  "turn": 5,
+  "agent": "builder",
+  "agent_run_id": "00000000-0000-4000-8000-000000000005",
+  "plan": {
+    "project_id": "01HXDEMO3DPRINT000000000000",
+    "version": 1,
+    "goal": "3D printer sitting idle for a month — make me money.",
+    "vertical": "print-on-demand",
+    "agents": [
+      { "role": "builder", "task": "Fix bugs reported by Replay QA and re-ship" }
+    ],
+    "budget_usd": 200,
+    "terac_studies_planned": [],
+    "owner_contact": { "channel": "imessage", "address": "+15555550100" }
+  },
+  "prior_bugs": [
+    {
+      "bug_id": "b7q2m4nx",
+      "severity": "blocker",
+      "where": "/api/cart",
+      "observed": "returned 404 on SKU-2",
+      "expected": "return 200 with cart line item",
+      "repro": ["GET /sku/2", "click Add to cart", "observe network response"]
+    },
+    {
+      "bug_id": "c3f8pk9a",
+      "severity": "major",
+      "where": "/checkout (mobile)",
+      "observed": "price is not visible at 390x844 viewport",
+      "expected": "price row visible above the fold on mobile",
+      "repro": ["resize viewport to 390x844", "load /checkout", "check that .total is in-view"]
+    }
+  ],
+  "messages": [],
+  "memory": {
+    "workspace": ["workspace/owner_profile.md"],
+    "project": [
+      "projects/01HXDEMO/plan.md",
+      "projects/01HXDEMO/build/v1-notes.md",
+      "projects/01HXDEMO/replay/run-1-bugs.md"
+    ]
+  },
+  "plugin_configs": [],
+  "env": {
+    "integrations_url": "http://localhost:4100",
+    "orchestrator_url": "http://localhost:4000",
+    "fixture_mode": true
+  }
+}

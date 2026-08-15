@@ -1,0 +1,27 @@
+{
+  "name": "@autobiz/orchestrator",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "demo": "PORT=4000 FIXTURE_MODE=true tsx src/server.ts",
+    "test:contracts": "vitest run --dir ../../tests/contracts orchestrator.contract.test.ts"
+  },
+  "dependencies": {
+    "@autobiz/shared": "workspace:*",
+    "@fastify/cors": "^10.0.1",
+    "better-sqlite3": "^11.3.0",
+    "fastify": "^5.0.0",
+    "pino": "^9.4.0",
+    "pino-pretty": "^11.2.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.2"
+  }
+}

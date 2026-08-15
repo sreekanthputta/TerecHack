@@ -41,5 +41,11 @@ Thumbs.db
 *.swp
 *.swo
 
-# Claude / agents scratch
+# Claude / agents scratch + worktrees
 .claude/scratch/
+.claude/worktrees/
+
+# Fixture-mode runtime state
+state/
+memory/
+autobiz.db

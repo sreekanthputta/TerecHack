@@ -227,6 +227,24 @@ Requirements:
 - Orchestrator not running? → Use fixture mock (`npm run demo`).
 - Mockup ambiguous? → Preserve the mockup's exact classes and copy. Screenshot for tie-breakers.
 
+<!-- WORKTREE-SETUP:START -->
+## Worktree setup
+
+You work in `.claude/worktrees/agent-a-ui/` on branch `feat/agent-a-ui`. From that directory:
+
+- **Only write files inside `packages/ui/`.** Root files (`pnpm-workspace.yaml`, root `package.json`, `pnpm-lock.yaml`, `tests/contracts/`) are frozen for Phase A. If you need a new runtime dep, add it via `pnpm --filter @autobiz/ui add <dep>` — pnpm updates the root lockfile in your branch only.
+- **Schema changes are forbidden here.** If your work needs to add a field to a shared type, STOP and follow [CONTRACTS.md §9](../CONTRACTS.md).
+- **Merge gate** (must be green before push):
+  ```bash
+  pnpm --filter @autobiz/ui build
+  pnpm --filter @autobiz/ui test:contracts
+  ```
+- **Commit cadence:** one commit per completed checkbox. Small commits, clear messages.
+- **Push:** `git push -u origin feat/agent-a-ui`
+- **PR:** open against `main` when every checkbox is done and Definition of Done is met. The contract test suite re-runs on the PR branch — green = merge.
+- **If your worktree gets stale**, rebase on `main`: `git fetch origin && git rebase origin/main`. Do not force-push shared branches.
+<!-- WORKTREE-SETUP:END -->
+
 ## Standalone demo
 ```bash
 cd packages/ui

@@ -1,0 +1,26 @@
+{
+  "project_id": "01HXDEMO3DPRINT000000000000",
+  "run_id": "00000000-0000-4000-8000-000000000006",
+  "builder_version": 1,
+  "passed": 15,
+  "failed": 2,
+  "bugs": [
+    {
+      "bug_id": "b7q2m4nx",
+      "severity": "blocker",
+      "where": "/api/cart",
+      "observed": "returned 404 on SKU-2",
+      "expected": "return 200 with cart line item",
+      "repro": ["GET /sku/2", "click Add to cart", "observe network response"]
+    },
+    {
+      "bug_id": "c3f8pk9a",
+      "severity": "major",
+      "where": "/checkout (mobile)",
+      "observed": "price is not visible at 390x844 viewport",
+      "expected": "price row visible above the fold on mobile",
+      "repro": ["resize viewport to 390x844", "load /checkout", "check that .total is in-view"]
+    }
+  ],
+  "ts": "2026-08-15T18:12:00.000Z"
+}

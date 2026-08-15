@@ -1,0 +1,12 @@
+packages:
+  - packages/shared
+  - packages/ui
+  - packages/orchestrator
+  - packages/integrations
+  - packages/agents/planner
+  - packages/agents/researcher
+  - packages/agents/builder
+  - packages/agents/verifier
+  - packages/agents/replay-qa
+  - packages/agents/revenue-watcher
+  - packages/agents/service-watcher

@@ -183,6 +183,24 @@ Delivered as a single JSON line on stdin at spawn. Also available via `GET /inte
 - Turn scheduler ambiguous? Defer to explicit deps in the plan; if unclear, spawn agents sequentially.
 - SSE flakes? UI has its own retry with `Last-Event-ID`. Focus on `project_seq` monotonicity — that's the only correctness contract.
 
+<!-- WORKTREE-SETUP:START -->
+## Worktree setup
+
+You work in `.claude/worktrees/agent-b-orch/` on branch `feat/agent-b-orch`. From that directory:
+
+- **Only write files inside `packages/orchestrator/`.** Root files (`pnpm-workspace.yaml`, root `package.json`, `pnpm-lock.yaml`, `tests/contracts/`) are frozen for Phase A. If you need a new runtime dep, add it via `pnpm --filter @autobiz/orchestrator add <dep>` — pnpm updates the root lockfile in your branch only.
+- **Schema changes are forbidden here.** If your work needs to add a field to a shared type, STOP and follow [CONTRACTS.md §9](../CONTRACTS.md).
+- **Merge gate** (must be green before push):
+  ```bash
+  pnpm --filter @autobiz/orchestrator build
+  pnpm --filter @autobiz/orchestrator test:contracts
+  ```
+- **Commit cadence:** one commit per completed checkbox. Small commits, clear messages.
+- **Push:** `git push -u origin feat/agent-b-orch`
+- **PR:** open against `main` when every checkbox is done and Definition of Done is met. The contract test suite re-runs on the PR branch — green = merge.
+- **If your worktree gets stale**, rebase on `main`: `git fetch origin && git rebase origin/main`. Do not force-push shared branches.
+<!-- WORKTREE-SETUP:END -->
+
 ## Standalone demo
 ```bash
 cd packages/orchestrator

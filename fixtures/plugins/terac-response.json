@@ -1,0 +1,12 @@
+{
+  "ask_id": "fixture-pricing-topic",
+  "project_id": "01HXDEMO3DPRINT000000000000",
+  "responses": [
+    { "answer": "$18–24 feels right for a 3D-printed desk toy", "reasoning": "priced against similar Etsy sellers", "respondent_id": "r-101" },
+    { "answer": "$25 max, otherwise I'd buy resin instead", "respondent_id": "r-102" },
+    { "answer": "$20", "reasoning": "impulse-buy sweet spot", "respondent_id": "r-103" },
+    { "answer": "$19", "respondent_id": "r-104" },
+    { "answer": "$22 if the design is unique", "reasoning": "design > material", "respondent_id": "r-105" }
+  ],
+  "received_at": "2026-08-15T18:03:22.000Z"
+}

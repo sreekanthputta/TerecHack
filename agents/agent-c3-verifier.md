@@ -106,6 +106,24 @@ import type {
 - Terac timeout? Emit `error`, preserve the low-confidence decision as the outcome (before === after with `aggregate: "no human input received within timeout"`), continue.
 - Claude refuses structured output? Retry once with schema-in-prompt reminder.
 
+<!-- WORKTREE-SETUP:START -->
+## Worktree setup
+
+You work in `.claude/worktrees/agent-c3-verifier/` on branch `feat/agent-c3-verifier`. From that directory:
+
+- **Only write files inside `packages/agents/verifier/`.** Root files (`pnpm-workspace.yaml`, root `package.json`, `pnpm-lock.yaml`, `tests/contracts/`) are frozen for Phase A. If you need a new runtime dep, add it via `pnpm --filter @autobiz/agent-verifier add <dep>` — pnpm updates the root lockfile in your branch only.
+- **Schema changes are forbidden here.** If your work needs to add a field to a shared type, STOP and follow [CONTRACTS.md §9](../CONTRACTS.md).
+- **Merge gate** (must be green before push):
+  ```bash
+  pnpm --filter @autobiz/agent-verifier build
+  pnpm --filter @autobiz/agent-verifier test:contracts
+  ```
+- **Commit cadence:** one commit per completed checkbox. Small commits, clear messages.
+- **Push:** `git push -u origin feat/agent-c3-verifier`
+- **PR:** open against `main` when every checkbox is done and Definition of Done is met. The contract test suite re-runs on the PR branch — green = merge.
+- **If your worktree gets stale**, rebase on `main`: `git fetch origin && git rebase origin/main`. Do not force-push shared branches.
+<!-- WORKTREE-SETUP:END -->
+
 ## Standalone demo
 ```bash
 FIXTURE_MODE=true TURN_ID=tv INT_URL=http://localhost:4100 ORCH_URL=http://localhost:4000 \

@@ -63,6 +63,24 @@ import type { AgentContext, BusinessPlan, TraceEvent } from "@autobiz/shared";
 - Do not directly call integrations.
 - Do not write to memory paths outside your project.
 
+<!-- WORKTREE-SETUP:START -->
+## Worktree setup
+
+You work in `.claude/worktrees/agent-c0-planner/` on branch `feat/agent-c0-planner`. From that directory:
+
+- **Only write files inside `packages/agents/planner/`.** Root files (`pnpm-workspace.yaml`, root `package.json`, `pnpm-lock.yaml`, `tests/contracts/`) are frozen for Phase A. If you need a new runtime dep, add it via `pnpm --filter @autobiz/agent-planner add <dep>` — pnpm updates the root lockfile in your branch only.
+- **Schema changes are forbidden here.** If your work needs to add a field to a shared type, STOP and follow [CONTRACTS.md §9](../CONTRACTS.md).
+- **Merge gate** (must be green before push):
+  ```bash
+  pnpm --filter @autobiz/agent-planner build
+  pnpm --filter @autobiz/agent-planner test:contracts
+  ```
+- **Commit cadence:** one commit per completed checkbox. Small commits, clear messages.
+- **Push:** `git push -u origin feat/agent-c0-planner`
+- **PR:** open against `main` when every checkbox is done and Definition of Done is met. The contract test suite re-runs on the PR branch — green = merge.
+- **If your worktree gets stale**, rebase on `main`: `git fetch origin && git rebase origin/main`. Do not force-push shared branches.
+<!-- WORKTREE-SETUP:END -->
+
 ## Standalone demo
 ```bash
 cd packages/agents/planner
