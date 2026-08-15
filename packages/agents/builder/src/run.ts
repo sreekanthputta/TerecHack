@@ -1,5 +1,6 @@
 import { AgentContextSchema, type AgentContext } from "@autobiz/shared";
 import { OrchClient } from "./orch.js";
+import { pickTemplate } from "./template.js";
 
 const AGENT = "builder" as const;
 
@@ -33,9 +34,12 @@ async function main() {
       : `builder v${version}: fresh build for ${ctx.plan.vertical} project`,
   });
 
+  const template = pickTemplate(ctx.plan);
+
   await orch.event({
     type: "result",
-    content: `builder v${version} finished (stub)`,
+    content: `builder v${version} finished; template=${template.id}`,
+    metadata: { template: template.id, sku_count: template.sku_count },
   });
 }
 
