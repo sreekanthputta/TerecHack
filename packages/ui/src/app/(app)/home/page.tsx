@@ -247,7 +247,7 @@ export default function HomePage() {
                       {statusPill(p.status)}
                     </div>
                     <div className="flex items-center gap-4 text-xs text-faint mono tabnum">
-                      <span>started {relativeTime(p.started_at)}</span>
+                      <span title={p.started_at}>started {relativeTime(p.started_at)}</span>
                       <span>·</span>
                       <span>{p.decisions_count} decisions</span>
                       {p.charges_count > 0 && (
