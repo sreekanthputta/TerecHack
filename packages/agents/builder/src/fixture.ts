@@ -7,7 +7,7 @@ export const FIXTURE_PAYMENT_LINK: PaymentLink = {
 
 export function fixtureDeploy(slug: string, version: number): DeployResult {
   return {
-    url: `https://${slug}-v${version}.onrender.com`,
+    url: `https://${slug}.onrender.com`,
     deploy_id: `dep_fixture_${slug}_v${version}`,
   };
 }

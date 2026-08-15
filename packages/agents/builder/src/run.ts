@@ -6,6 +6,7 @@ import { renderTemplate, slugify } from "./templates.js";
 import { IntegrationsClient } from "./integrations.js";
 import { FIXTURE_PAYMENT_LINK, fixtureDelay, fixtureDeploy } from "./fixture.js";
 import { buildNotes } from "./notes.js";
+import { regionsForBug, fixApproach, unionRegions } from "./retry.js";
 import type { PaymentLink, DeployResult } from "./integrations.js";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -55,7 +56,7 @@ async function deploy(opts: {
     await fixtureDelay(30);
     return fixtureDeploy(opts.slug, opts.version);
   }
-  const name = `${opts.slug}-v${opts.version}`;
+  const name = opts.slug;
   try {
     return await opts.integrations.deploy({
       project_id: opts.ctx.project_id,
@@ -110,13 +111,25 @@ async function main() {
   });
 
   const { version, isRetry } = detectVersion(ctx);
+  const priorBugs = ctx.prior_bugs ?? [];
 
   await orch.event({
     type: "thought",
     content: isRetry
-      ? `builder v${version}: retry run with ${ctx.prior_bugs!.length} prior bug(s)`
+      ? `builder v${version}: retry run with ${priorBugs.length} prior bug(s)`
       : `builder v${version}: fresh build for ${ctx.plan.vertical} project`,
   });
+
+  if (isRetry) {
+    for (const bug of priorBugs) {
+      const regions = regionsForBug(bug);
+      await orch.event({
+        type: "thought",
+        content: fixApproach(bug, regions).slice(0, 500),
+        metadata: { bug_id: bug.bug_id, regions },
+      });
+    }
+  }
 
   const template = pickTemplate(ctx.plan);
   await orch.event({
@@ -125,15 +138,19 @@ async function main() {
     metadata: { template: template.id, sku_count: template.sku_count },
   });
 
+  const regenRegions = isRetry ? unionRegions(priorBugs) : undefined;
   const copy = await generateCopy({
     plan: ctx.plan,
     template: template.id,
     sku_count: template.sku_count,
     fixture_mode: ctx.env.fixture_mode,
+    regen_regions: regenRegions,
   });
   await orch.event({
     type: "thought",
-    content: `generated copy: "${copy.hero}" (${copy.products.length} products)`,
+    content: isRetry
+      ? `regenerated regions: ${regenRegions!.join(", ")}`
+      : `generated copy: "${copy.hero}" (${copy.products.length} products)`,
   });
 
   const slug = slugify(`${copy.brand_name}-${ctx.project_id}`);
@@ -183,6 +200,15 @@ async function main() {
     },
   });
 
+  const fixedBugIds = priorBugs.map((b) => b.bug_id);
+  if (isRetry) {
+    await orch.event({
+      type: "bugs_fixed",
+      content: `fixed ${fixedBugIds.length} bug(s): ${fixedBugIds.join(", ")}`,
+      metadata: { bug_ids: fixedBugIds, builder_version: version },
+    });
+  }
+
   const notes = buildNotes({
     version,
     template: template.id,
@@ -190,6 +216,7 @@ async function main() {
     paymentLink,
     deployRes,
     priorBugs: ctx.prior_bugs,
+    fixedBugIds: isRetry ? fixedBugIds : undefined,
   });
   await orch.memory(`projects/${ctx.project_id}/build/v${version}-notes.md`, notes);
 
