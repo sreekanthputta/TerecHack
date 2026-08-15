@@ -5,6 +5,7 @@ import { generateCopy } from "./content.js";
 import { renderTemplate, slugify } from "./templates.js";
 import { IntegrationsClient } from "./integrations.js";
 import { FIXTURE_PAYMENT_LINK, fixtureDelay, fixtureDeploy } from "./fixture.js";
+import { buildNotes } from "./notes.js";
 import type { PaymentLink, DeployResult } from "./integrations.js";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -180,6 +181,24 @@ async function main() {
       deploy_id: deployRes.deploy_id,
       builder_version: version,
     },
+  });
+
+  const notes = buildNotes({
+    version,
+    template: template.id,
+    copy,
+    paymentLink,
+    deployRes,
+    priorBugs: ctx.prior_bugs,
+  });
+  await orch.memory(`projects/${ctx.project_id}/build/v${version}-notes.md`, notes);
+
+  const httpUrl = deployRes.url.startsWith("http") ? deployRes.url : undefined;
+  const httpPay = paymentLink.url.startsWith("http") ? paymentLink.url : undefined;
+  await orch.state({
+    builder_version: version,
+    ...(httpUrl ? { landing_url: httpUrl } : {}),
+    ...(httpPay ? { stripe_payment_link: httpPay } : {}),
   });
 
   await orch.event({
