@@ -5,7 +5,10 @@ import { generateCopy } from "./content.js";
 import { renderTemplate, slugify } from "./templates.js";
 import { IntegrationsClient } from "./integrations.js";
 import { FIXTURE_PAYMENT_LINK, fixtureDelay, fixtureDeploy } from "./fixture.js";
-import type { PaymentLink } from "./integrations.js";
+import type { PaymentLink, DeployResult } from "./integrations.js";
+import { writeFileSync, mkdirSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const AGENT = "builder" as const;
 
@@ -36,6 +39,51 @@ async function createPaymentLink(opts: {
       return { url: fallback, id: "pl_demo_fallback" };
     }
     throw err;
+  }
+}
+
+async function deploy(opts: {
+  ctx: AgentContext;
+  integrations: IntegrationsClient;
+  slug: string;
+  html: string;
+  version: number;
+  orch: OrchClient;
+}): Promise<DeployResult> {
+  if (opts.ctx.env.fixture_mode) {
+    await fixtureDelay(30);
+    return fixtureDeploy(opts.slug, opts.version);
+  }
+  const name = `${opts.slug}-v${opts.version}`;
+  try {
+    return await opts.integrations.deploy({
+      project_id: opts.ctx.project_id,
+      html: opts.html,
+      name,
+    });
+  } catch (firstErr) {
+    await opts.orch.event({
+      type: "error",
+      content: `render deploy failed, retrying: ${(firstErr as Error).message}`,
+    });
+    await new Promise((r) => setTimeout(r, 500));
+    try {
+      return await opts.integrations.deploy({
+        project_id: opts.ctx.project_id,
+        html: opts.html,
+        name,
+      });
+    } catch (secondErr) {
+      const dir = join(tmpdir(), "autobiz-builder");
+      mkdirSync(dir, { recursive: true });
+      const path = join(dir, `${opts.ctx.project_id}.html`);
+      writeFileSync(path, opts.html, "utf8");
+      await opts.orch.event({
+        type: "error",
+        content: `render deploy failed twice, wrote local fallback: ${(secondErr as Error).message}`,
+      });
+      return { url: `file://${path}`, deploy_id: `local_${opts.slug}` };
+    }
   }
 }
 
@@ -115,13 +163,32 @@ async function main() {
     metadata: { bytes: html.length, template: template.id },
   });
 
+  const deployRes = await deploy({
+    ctx,
+    integrations,
+    slug,
+    html,
+    version,
+    orch,
+  });
+
+  await orch.event({
+    type: "deploy",
+    content: `deployed v${version} to ${deployRes.url}`,
+    metadata: {
+      landing_url: deployRes.url,
+      deploy_id: deployRes.deploy_id,
+      builder_version: version,
+    },
+  });
+
   await orch.event({
     type: "result",
     content: `builder v${version} finished; template=${template.id}`,
     metadata: {
       template: template.id,
       sku_count: template.sku_count,
-      landing_url: paymentLink.url,
+      landing_url: deployRes.url,
     },
   });
 }
