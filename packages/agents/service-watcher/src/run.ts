@@ -237,6 +237,7 @@ async function main() {
     });
   }
 
+  if (fixtureMode) state.fixture_cursor += 1;
   saveState(state);
 
   await emit({
