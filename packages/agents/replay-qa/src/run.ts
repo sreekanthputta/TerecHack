@@ -164,9 +164,23 @@ async function runOnce(ctx: AgentContext): Promise<void> {
   try {
     status = await drainStatus(orch, loopQa, project);
   } catch (err) {
-    await orch.event("error", `Loop QA polling failed: ${(err as Error).message}`, {
-      metadata: { dashboard_url: project.dashboard_url, recovery: "Builder does not respawn." },
-    });
+    const msg = (err as Error).message;
+    const isTimeout = msg.includes("timeout");
+    await orch.event(
+      "error",
+      isTimeout
+        ? `Loop QA timed out with no status advance. Builder does not respawn.`
+        : `Loop QA polling failed: ${msg}`,
+      {
+        metadata: {
+          dashboard_url: project.dashboard_url,
+          loop_qa_project_id: project.id,
+          passed: 0,
+          failed: 0,
+          unknown: true,
+        },
+      },
+    );
     return;
   }
 

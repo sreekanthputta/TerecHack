@@ -46,23 +46,29 @@ export type LoopQaClient = {
 };
 
 /**
- * HTTP client that talks to integrations at `${baseUrl}/replay/*`.
+ * HTTP client that talks to integrations at `${baseUrl}/replay/*`. 5xx responses
+ * are retried once before surfacing an error.
  */
 export function createHttpClient(baseUrl: string, pollIntervalMs = 5000, timeoutMs = 180_000): LoopQaClient {
-  async function get<T>(path: string): Promise<T> {
-    const res = await fetch(`${baseUrl}${path}`);
-    if (!res.ok) throw new Error(`GET ${path} -> ${res.status}`);
-    return (await res.json()) as T;
-  }
-  async function post<T>(path: string, body: unknown): Promise<T> {
-    const res = await fetch(`${baseUrl}${path}`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
+  async function once(method: "GET" | "POST", path: string, body?: unknown): Promise<Response> {
+    return fetch(`${baseUrl}${path}`, {
+      method,
+      ...(body !== undefined
+        ? { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }
+        : {}),
     });
-    if (!res.ok) throw new Error(`POST ${path} -> ${res.status}`);
+  }
+  async function req<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {
+    let res = await once(method, path, body);
+    if (res.status >= 500 && res.status < 600) {
+      await new Promise((r) => setTimeout(r, 250));
+      res = await once(method, path, body);
+    }
+    if (!res.ok) throw new Error(`${method} ${path} -> ${res.status}`);
     return (await res.json()) as T;
   }
+  const get = <T>(path: string) => req<T>("GET", path);
+  const post = <T>(path: string, body: unknown) => req<T>("POST", path, body);
   return {
     async createProject(input) {
       return post<LoopQaProject>(`/replay/project`, input);
