@@ -1,0 +1,10 @@
+{
+  "rotation": [
+    { "status": "healthy", "latency_ms": 121 },
+    { "status": "healthy", "latency_ms": 143 },
+    { "status": "healthy", "latency_ms": 118 },
+    { "status": "degraded", "latency_ms": 892 },
+    { "status": "healthy", "latency_ms": 132 },
+    { "status": "healthy", "latency_ms": 127 }
+  ]
+}

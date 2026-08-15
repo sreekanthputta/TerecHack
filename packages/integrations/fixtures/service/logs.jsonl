@@ -1,0 +1,10 @@
+{"ts":"2026-08-15T09:58:03Z","level":"info","message":"GET /","path":"/","status":200}
+{"ts":"2026-08-15T09:58:22Z","level":"info","message":"GET /product/cable-organizer-3pk","path":"/product/cable-organizer-3pk","status":200}
+{"ts":"2026-08-15T09:59:41Z","level":"info","message":"GET /checkout","path":"/checkout","status":200}
+{"ts":"2026-08-15T10:00:12Z","level":"warn","message":"cart line missing SKU for legacy request","path":"/api/cart","status":200}
+{"ts":"2026-08-15T10:04:03Z","level":"info","message":"POST /api/checkout","path":"/api/checkout","status":200}
+{"ts":"2026-08-15T10:05:31Z","level":"info","message":"GET /product/keycap-bundle","path":"/product/keycap-bundle","status":200}
+{"ts":"2026-08-15T10:07:19Z","level":"error","message":"upstream 503 from stripe","path":"/api/checkout","status":503}
+{"ts":"2026-08-15T10:07:29Z","level":"info","message":"POST /api/checkout retried","path":"/api/checkout","status":200}
+{"ts":"2026-08-15T10:11:47Z","level":"info","message":"stripe webhook charge.succeeded","path":"/webhooks/stripe","status":200}
+{"ts":"2026-08-15T10:14:02Z","level":"info","message":"GET /","path":"/","status":200}
