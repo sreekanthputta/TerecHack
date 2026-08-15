@@ -8,7 +8,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-    "demo": "PORT=4100 FIXTURE_MODE=true tsx src/server.ts",
+    "demo": "FIXTURE_MODE=true INTEGRATIONS_PORT=4123 LOG_LEVEL=silent tsx src/demo.ts",
+    "server": "tsx src/server.ts",
     "test:contracts": "vitest run --root ../.. tests/contracts/integrations.contract.test.ts"
   },
   "dependencies": {
