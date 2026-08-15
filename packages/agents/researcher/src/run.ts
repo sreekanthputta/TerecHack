@@ -1,47 +1,27 @@
-import { AgentContextSchema, type TraceEventInput } from "@autobiz/shared";
-
-const AGENT = "researcher" as const;
-
-async function readStdin(): Promise<string> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
-  return Buffer.concat(chunks).toString("utf8");
-}
-
-async function postEvent(orchUrl: string, turnId: string, event: TraceEventInput) {
-  const res = await fetch(`${orchUrl}/internal/turns/${turnId}/events`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(event),
-  });
-  if (!res.ok) throw new Error(`POST event failed: ${res.status}`);
-}
+import { AgentContextSchema } from "@autobiz/shared";
+import { readEnv } from "./config.js";
+import { baseFrom, makeEmitter, makeMemoryWriter } from "./orch.js";
+import { readStdin } from "./stdin.js";
 
 async function main() {
   const raw = await readStdin();
   const ctx = AgentContextSchema.parse(JSON.parse(raw));
-  const orchUrl = ctx.env.orchestrator_url;
-  const nowIso = () => new Date().toISOString();
+  const env = readEnv(ctx);
+  const emit = makeEmitter(env.orchUrl, env.turnId, baseFrom(ctx));
+  const writeMemory = makeMemoryWriter(env.orchUrl, env.turnId);
 
-  const base = {
-    project_id: ctx.project_id,
-    turn: ctx.turn,
-    agent: AGENT,
-    agent_run_id: ctx.agent_run_id,
-  } as const;
-
-  await postEvent(orchUrl, ctx.turn_id, {
-    ...base,
+  await emit({
     type: "thought",
-    content: `[stub] ${AGENT} received context for project ${ctx.project_id}`,
-    ts: nowIso(),
+    content: `researcher received context for project ${ctx.project_id}, goal "${ctx.plan.goal}"`,
   });
 
-  await postEvent(orchUrl, ctx.turn_id, {
-    ...base,
+  // TODO: real vs fixture flow lands in follow-up commits.
+  void writeMemory;
+
+  await emit({
     type: "result",
-    content: `[stub] ${AGENT} finished. Real implementation lives in this worktree's PRD.`,
-    ts: nowIso(),
+    content: `researcher stub — real flow lands next commit`,
+    confidence: 0.5,
   });
 }
 
