@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "start": "next start -p 3000",
-    "dev": "next dev -p 3000",
-    "demo": "next dev -p 3000",
+    "start": "next start -p ${UI_PORT:-3000}",
+    "dev": "next dev -p ${UI_PORT:-3000}",
+    "demo": "node scripts/dev-with-fixtures.mjs",
+    "mock:server": "node scripts/mock-server.mjs",
     "test:contracts": "vitest run --root ../.. tests/contracts/ui.contract.test.ts"
   },
   "dependencies": {
