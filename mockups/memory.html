@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AutoBusiness — Memory</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0A0A0A; --surface:#111112; --surface-2:#17171A; --surface-3:#1D1D21;
+    --border:rgba(255,255,255,0.06); --border-strong:rgba(255,255,255,0.10);
+    --text:#E8E8EA; --text-dim:#9A9AA1; --text-faint:#6B6B72;
+    --violet:#8B5CF6; --violet-glow:rgba(139,92,246,0.35);
+    --emerald:#10B981; --amber:#F59E0B; --rose:#F43F5E; --sky:#38BDF8; }
+  * { -webkit-font-smoothing:antialiased; }
+  html,body { background:var(--bg); color:var(--text); font-family:'Inter',ui-sans-serif,system-ui,sans-serif; font-feature-settings:'cv11','ss01'; }
+  .mono { font-family:'JetBrains Mono',ui-monospace,monospace; }
+  .serif { font-family:'Instrument Serif',ui-serif,Georgia,serif; letter-spacing:-0.015em; }
+  .tabnum { font-variant-numeric:tabular-nums; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  .surface-2 { background:var(--surface-2); }
+  .surface-3 { background:var(--surface-3); }
+  .divider { border-color:var(--border); }
+  .text-dim { color:var(--text-dim); }
+  .text-faint { color:var(--text-faint); }
+  .accent-bg { background:var(--violet); }
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:500; }
+  .pill-agent { background:rgba(139,92,246,0.10); color:#DDD6FE; border:1px solid rgba(139,92,246,0.25); }
+  .pill-updated { background:rgba(16,185,129,0.10); color:#6EE7B7; border:1px solid rgba(16,185,129,0.22); }
+  .pill-archived { background:rgba(107,107,114,0.15); color:#9A9AA1; border:1px solid rgba(107,107,114,0.30); }
+  .subtle-radial {
+    background:
+      radial-gradient(ellipse 900px 300px at 30% -10%, rgba(139,92,246,0.06), transparent 60%),
+      var(--bg);
+  }
+  .file-item { transition:background 120ms; }
+  .file-item:hover { background:rgba(255,255,255,0.02); }
+  .file-item.active { background:rgba(139,92,246,0.06); border-left:2px solid var(--violet); padding-left:14px; }
+  .md-content { line-height:1.6; }
+  .md-content h1 { font-family:'Instrument Serif',serif; font-size:32px; letter-spacing:-0.01em; margin:24px 0 12px; }
+  .md-content h2 { font-size:15px; font-weight:600; letter-spacing:0.02em; text-transform:uppercase; color:var(--text-dim); margin:24px 0 10px; }
+  .md-content p { color:var(--text); margin:0 0 12px; }
+  .md-content code { font-family:'JetBrains Mono',monospace; background:var(--surface-2); padding:1px 6px; border-radius:4px; font-size:12px; }
+  .md-content ul { margin:0 0 12px; padding-left:20px; }
+  .md-content li { color:var(--text-dim); margin:4px 0; }
+  .md-content li strong { color:var(--text); font-weight:600; }
+  .md-content blockquote { border-left:2px solid var(--violet); padding-left:12px; color:var(--text-dim); margin:12px 0; font-style:italic; }
+  .yaml-block { background:rgba(139,92,246,0.04); border:1px solid rgba(139,92,246,0.15); border-radius:8px; padding:12px 14px; font-family:'JetBrains Mono',monospace; font-size:12px; margin-bottom:20px; }
+  .yaml-block .k { color:#C4B5FD; }
+  .yaml-block .v { color:var(--text); }
+  .yaml-block .c { color:var(--text-faint); }
+  .agent-badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-family:'JetBrains Mono',monospace; }
+</style>
+</head>
+<body class="subtle-radial min-h-screen">
+
+<!-- TOP NAV -->
+<div class="border-b divider">
+  <div class="max-w-[1400px] mx-auto px-8 h-14 flex items-center gap-4">
+    <a href="./project.html" class="flex items-center gap-2 text-dim hover:text-white transition-colors">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+      <span class="text-sm">Back to project</span>
+    </a>
+    <div class="h-4 w-px surface-3"></div>
+    <span class="text-sm font-medium">Agent Memory</span>
+    <div class="text-xs mono text-faint tabnum ml-auto">proj_k3n2p9xa · /data/projects/proj_k3n2p9xa/memory</div>
+  </div>
+</div>
+
+<div class="max-w-[1400px] mx-auto px-8 pt-8 pb-16">
+
+  <!-- HEADER -->
+  <div class="mb-8">
+    <div class="pill pill-agent mb-4">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h6l2 2h8a2 2 0 012 2v9a3 3 0 01-3 3H4a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+      shared memory · read by every future agent
+    </div>
+    <h1 class="serif text-5xl mb-2">Everything the agents know.</h1>
+    <p class="text-dim max-w-2xl">Persisted between turns. Read by every new agent that spawns. Survives crashes, restarts, pivots. This is why we don't lose context when killing an agent.</p>
+  </div>
+
+  <div class="grid grid-cols-12 gap-6">
+
+    <!-- LEFT: FILE TREE -->
+    <div class="col-span-4">
+      <div class="card p-4">
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b divider">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6l2 2h8a2 2 0 012 2v9a3 3 0 01-3 3H4a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+          <span class="mono text-xs text-dim">memory/</span>
+          <span class="ml-auto text-xs mono text-faint tabnum">18 files · 47 KB</span>
+        </div>
+
+        <div class="space-y-0.5 text-sm">
+          <!-- top level -->
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-faint">briefing.md</div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-faint">plan.md</div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-faint">decisions.md</div>
+
+          <!-- researcher folder -->
+          <div class="px-4 py-1.5 mono text-xs text-dim flex items-center gap-1.5 mt-3">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            researcher/
+          </div>
+          <div class="file-item active px-4 py-1.5 rounded mono text-xs flex items-center justify-between">
+            <span>niche-analysis.md</span>
+            <span class="pill pill-updated text-[9px] py-0 px-1.5">1m ago</span>
+          </div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-dim">pricing-signals.md</div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-dim">competitor-scan.md</div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-dim">seasonality.md</div>
+
+          <!-- verifier folder -->
+          <div class="px-4 py-1.5 mono text-xs text-dim flex items-center gap-1.5 mt-3">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            verifier/
+          </div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-dim">terac-history.md</div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-dim">niche-viability-study.md</div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-dim">headline-ab-study.md</div>
+
+          <!-- builder folder -->
+          <div class="px-4 py-1.5 mono text-xs text-dim flex items-center gap-1.5 mt-3">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            builder/
+          </div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-dim">product.md</div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-dim">landing-copy.md</div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-dim">deploy-log.md</div>
+
+          <!-- shared folder -->
+          <div class="px-4 py-1.5 mono text-xs text-dim flex items-center gap-1.5 mt-3">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            shared/
+          </div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-dim">product.md</div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-dim">budget.md</div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-dim">owner-preferences.md</div>
+
+          <!-- archived -->
+          <div class="px-4 py-1.5 mono text-xs text-dim flex items-center gap-1.5 mt-3">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            .archived/
+          </div>
+          <div class="file-item px-4 py-1.5 rounded mono text-xs text-faint flex items-center justify-between">
+            <span>phone-stands-hypothesis.md</span>
+            <span class="pill pill-archived text-[9px] py-0 px-1.5">superseded</span>
+          </div>
+        </div>
+
+        <!-- footer stats -->
+        <div class="mt-5 pt-4 border-t divider grid grid-cols-3 gap-2 text-xs">
+          <div>
+            <div class="text-faint mono uppercase tracking-wider text-[10px] mb-0.5">last write</div>
+            <div class="text-dim tabnum">1m ago</div>
+          </div>
+          <div>
+            <div class="text-faint mono uppercase tracking-wider text-[10px] mb-0.5">writers</div>
+            <div class="text-dim tabnum">4 agents</div>
+          </div>
+          <div>
+            <div class="text-faint mono uppercase tracking-wider text-[10px] mb-0.5">turns</div>
+            <div class="text-dim tabnum">7</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: FILE VIEW -->
+    <div class="col-span-8">
+      <div class="card p-8">
+        <!-- breadcrumb + actions -->
+        <div class="flex items-center gap-2 mb-6 text-xs mono">
+          <span class="text-faint">memory/</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-faint"><path d="M9 6l6 6-6 6"/></svg>
+          <span class="text-faint">researcher/</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-faint"><path d="M9 6l6 6-6 6"/></svg>
+          <span class="text-dim font-medium">niche-analysis.md</span>
+          <span class="pill pill-updated ml-auto text-[10px]">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 6v6l4 2"/></svg>
+            updated 1m ago
+          </span>
+          <span class="agent-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+            <span style="color:#C4B5FD;">researcher</span>
+          </span>
+        </div>
+
+        <!-- yaml frontmatter -->
+        <div class="yaml-block">
+          <div class="c mb-2">---</div>
+          <div><span class="k">agent:</span> <span class="v">researcher</span></div>
+          <div><span class="k">project:</span> <span class="v">proj_k3n2p9xa</span></div>
+          <div><span class="k">topic:</span> <span class="v">niche-analysis</span></div>
+          <div><span class="k">confidence:</span> <span class="v">0.85</span> <span class="c"># updated after Terac validation</span></div>
+          <div><span class="k">last_updated:</span> <span class="v">2026-08-15T14:32:11Z</span></div>
+          <div><span class="k">version:</span> <span class="v">3</span></div>
+          <div><span class="k">tags:</span> <span class="v">[3d-printing, etsy, cable-organizers]</span></div>
+          <div><span class="k">supersedes:</span> <span class="v">[.archived/phone-stands-hypothesis.md]</span></div>
+          <div class="c mt-2">---</div>
+        </div>
+
+        <!-- markdown content -->
+        <div class="md-content">
+          <h1>Niche analysis for idle 3D printer</h1>
+
+          <blockquote>
+            Owner brief: make money with an idle 3D printer over one month. Budget $50 for materials. No brand yet.
+          </blockquote>
+
+          <h2>Top pick</h2>
+          <p>
+            <strong>Cable organizers</strong> — printable in 2-3 hours per unit, PLA-friendly, target price
+            <code>$12</code>. Validated against 15 real makers via Terac; 12 of 15 endorsed as the strongest
+            single-month monetization play among the candidates below.
+          </p>
+
+          <h2>Candidates considered</h2>
+          <ul>
+            <li><strong>Cable organizers</strong> — winner. Consistent demand year-round, forgiving prints, best $/print-hour ratio in the sample. Etsy listings clustered at $10-15 with steady sales velocity.</li>
+            <li><strong>Phone stands</strong> — runner-up. Saturated market but proven; margins compressed by TPU-competitors. Terac makers noted "everyone starts here — it's fine but not fast money."</li>
+            <li><strong>Planter pots</strong> — passed. Aesthetically strong but competes directly with ceramics on the same platform; Etsy buyers prefer non-3D-printed materials for décor.</li>
+          </ul>
+
+          <h2>Evidence sources</h2>
+          <ul>
+            <li>Etsy top-100 &lt;$25 in "3D printed home" category (2026-08-15 scrape, N=100)</li>
+            <li>r/3Dprinting best-sellers thread cross-references (last 6 months, N=47 mentions)</li>
+            <li>Terac study <code>study_9x2fk</code> — 15 verified makers, response rate 100%, median response time 42s</li>
+          </ul>
+
+          <h2>Confidence trajectory</h2>
+          <ul>
+            <li>Initial (Etsy-only): <code>0.50</code> — thin sample, single source</li>
+            <li>Post-Terac validation: <code>0.85</code> — 12/15 makers converged on same pick with reasoning</li>
+          </ul>
+
+          <h2>Next actions for other agents</h2>
+          <ul>
+            <li><strong>Builder</strong>: source 3 SKUs — "under-desk trough," "monitor-clip organizer," "power-brick shelf." Price at $12/unit unless pricing study says otherwise.</li>
+            <li><strong>Verifier</strong>: schedule follow-up pricing A/B via Terac general population before launch.</li>
+            <li><strong>Marketer</strong>: pull Terac maker reasoning quotes for use as launch-page social proof.</li>
+          </ul>
+
+          <h2>What we ruled out and why</h2>
+          <p>
+            Toys, jewelry, and cosplay props all showed higher listing counts but longer sales cycles.
+            For a one-month monetization window, we prioritize print time &lt; 3h/unit and price point &lt; $20 to
+            maximize turnover.
+          </p>
+
+          <h2>References</h2>
+          <ul>
+            <li><code>memory/verifier/niche-viability-study.md</code> — full Terac study record</li>
+            <li><code>memory/shared/craft-market.md</code> — persona and buyer-motivation notes</li>
+            <li><code>memory/researcher/pricing-signals.md</code> — Etsy scrape methodology and cache</li>
+          </ul>
+        </div>
+
+        <!-- footer -->
+        <div class="mt-8 pt-6 border-t divider flex items-center gap-4 text-xs text-faint mono">
+          <div class="flex items-center gap-2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20l9-16H3z" transform="rotate(180 12 12)"/></svg>
+            <span>written by <span class="text-dim">researcher</span></span>
+          </div>
+          <span>·</span>
+          <span>rev 3 · <span class="tabnum">1m ago</span></span>
+          <span>·</span>
+          <span>read by <span class="text-dim">verifier, builder, marketer</span></span>
+          <span class="ml-auto">2.4 KB</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,170 +1,235 @@
-# Agent A — Owner Console UI
+# Agent A · Track 1 — Owner Console UI
 
 ## Role
-You build the Owner Console — the single-page web app judges will look at for 3 straight minutes during the demo. This is the highest-visibility component. Prioritize polish.
+Build the Next.js 15 owner console. Every pixel the judge sees is yours. You render, you do not think.
 
 ## Owns
-`packages/ui/` — Next.js 15 (App Router) app. Nothing else.
+`packages/ui/` — everything under it. **Do not write anywhere else.**
 
 ## Consumes
-- `packages/shared/` (types) — read-only
-- `fixtures/traces/demo-happy-path.jsonl` — for dev mode replay
-- `fixtures/plans/3d-printer.json` — for dev mode initial state
-- Live: `ws://localhost:4000/api/traces/:business_id`
-- Live: `GET http://localhost:4000/api/business/:id`
-- Env: `NEXT_PUBLIC_ORCH_URL` (defaults to `http://localhost:4000`)
+- `packages/shared/` — types only (read-only import)
+- Orchestrator REST + SSE at `http://localhost:4000` (see [CONTRACTS.md §2](../CONTRACTS.md))
+- Design tokens from `mockups/` (see "Design system — LOCKED" below)
+- Fixtures for dev: `fixtures/traces/demo-3dprint.jsonl`, `fixtures/traces/demo-mugs.jsonl`
+- Env vars: `NEXT_PUBLIC_APP_URL`, `UI_PORT`
 
 ## Produces
-- Static-friendly Next.js app on `:3000`
-- Four UI panels (see below)
-- Standalone dev mode that replays fixtures with no backend
+- Next.js 15 app on port 3000
+- 6 pages (routes below)
+- SSE client that survives refresh via `Last-Event-ID`
+- No API server logic. UI reads state from orchestrator only.
 
-## Contracts (import from `packages/shared`)
-- `TraceEvent`
-- `DecisionRecord`
-- `BusinessState`
-- `BusinessPlan`
+## Contracts
+Import verbatim from `@autobiz/shared`:
+```typescript
+import type {
+  TraceEvent, BusinessState, DecisionRecord, BusinessPlan,
+  BugReport, PluginDescriptor, PluginConfig, ProjectStatus, AgentName
+} from "@autobiz/shared";
+```
+
+Fetch endpoints (never guess a URL — copy from CONTRACTS.md):
+- `GET /api/businesses` → list
+- `POST /api/business` with body `{idea, owner_contact?, idempotency_key}` → create
+- `GET /api/business/:id` → BusinessState
+- `GET /api/business/:id/stream` → SSE (with `Last-Event-ID` header on reconnect)
+- `GET /api/business/:id/events?since=<id>&limit=200` → paged history
+- `GET /api/business/:id/decisions` → DecisionRecord[]
+- `GET /api/business/:id/memory` → `{files: MemoryFile[]}`
+- `POST /api/business/:id/message` → queue pivot
+- `GET /api/plugins` → catalog
+- `GET /api/plugins/config` → masked configs
+- `PUT /api/plugins/:id/config` → save (server encrypts)
+- `DELETE /api/plugins/:id/config` → disconnect
+
+---
+
+## Design system — LOCKED
+
+Reference implementation: `mockups/*.html`. **Every page must visually match.** Do not deviate on tokens.
+
+### Tokens (put in `packages/ui/src/styles/tokens.css`)
+
+```css
+:root {
+  --bg: #0A0A0A;
+  --surface: #111112;
+  --surface-2: #17171A;
+  --border: rgba(255,255,255,0.06);
+  --border-strong: rgba(255,255,255,0.10);
+  --text: #E8E8EA;
+  --text-dim: #9A9AA1;
+  --text-faint: #6B6B72;
+  --violet: #8B5CF6;
+  --violet-glow: rgba(139,92,246,0.35);
+  --emerald: #10B981;
+  --amber: #F59E0B;
+  --rose: #F43F5E;
+  --cyan: #22D3EE;     /* Replay QA lane accent */
+}
+```
+
+### Fonts
+`Inter` (400/500/600/700) · `JetBrains Mono` (400/500/600) · `Instrument Serif` (regular + italic).
+Loaded via `next/font` at the root layout. **Do not use system-ui.**
+
+### Numerics
+Every price, count, latency, or elapsed-time number gets `font-variant-numeric: tabular-nums;` via `.tabnum` class.
+
+### Component classes
+- `.card` — `bg-surface border border-white/[0.06] rounded-xl`
+- `.pill` `.pill-live` `.pill-planning` `.pill-error` `.pill-cyan` `.pill-bug` `.pill-fix`
+- `.dot-live` — pulsing 6×6 emerald dot (see `mockups/home.html`)
+- `.btn` — violet primary
+- `.mono` `.serif` `.tabnum` helpers
+- `.subtle-radial` background for hero/landing
+- `.accent-ring` for focused prompt input
+
+### Agent lane colors (project page)
+| Agent | Left accent |
+|-------|-------------|
+| planner | violet `--violet` |
+| researcher | emerald `--emerald` |
+| verifier | amber `--amber` |
+| builder | text-dim white |
+| replay-qa | cyan `--cyan` |
+| revenue-watcher | emerald |
+| service-watcher | amber |
+
+---
+
+## Routes
+
+| Path | File | Mockup |
+|------|------|--------|
+| `/` | `app/(marketing)/page.tsx` | `mockups/landing.html` — public marketing, pricing, "Start Building" CTA links to `/home` |
+| `/home` | `app/(app)/home/page.tsx` | `mockups/home.html` — dashboard: prompt input + project list |
+| `/project/[id]` | `app/(app)/project/[id]/page.tsx` | `mockups/project.html` — live trace, decisions, agent lanes, ship&fix loop |
+| `/project/[id]` (pivot drawer) | (drawer overlay on same page) | `mockups/pivot.html` — pivot message queued for turn boundary |
+| `/project/[id]/memory` | `app/(app)/project/[id]/memory/page.tsx` | `mockups/memory.html` — md file tree viewer |
+| `/settings` | `app/(app)/settings/page.tsx` | `mockups/settings.html` — plugin catalog + connect modals |
+
+Marketing (`/`) has its own layout without the app chrome. Everything under `(app)` shares the top nav from `mockups/home.html`.
+
+---
+
+## SSE client — critical logic
+
+Location: `packages/ui/src/hooks/useProjectStream.ts`
+
+Requirements:
+1. `EventSource` to `/api/business/:id/stream`.
+2. Track last-seen event id. On reconnect (any error), open a new `EventSource` with `Last-Event-ID` header — use `@microsoft/fetch-event-source` or equivalent; native `EventSource` can't set headers.
+3. On page load: fetch `GET /api/business/:id/events?limit=200` for history, then open the stream. Backfill any gap between history and first live event via `?since=<lastId>`.
+4. **Refresh-safe:** navigating away and back must not double-render events or miss events.
+5. Buffer events by `agent_run_id` so the UI can lay them out per lane.
+6. Detect `type: "deploy"`, `bugs_found`, `bugs_fixed`, `decision`, `sale` for special rendering.
 
 ---
 
 ## Tasks
 
-Work top-down. Check each box, commit, move on.
-
 ### Setup
+- [ ] Init Next.js 15 (App Router, TypeScript, Tailwind) inside `packages/ui/`
+- [ ] Add `@autobiz/shared` as workspace dep
+- [ ] Wire `next/font` for Inter, JetBrains Mono, Instrument Serif
+- [ ] Create `src/styles/tokens.css` and import in root layout
+- [ ] Add root layout with dark background + font vars
+- [ ] Confirm `npm run dev` boots on port from `UI_PORT` env
 
-- [ ] Scaffold Next.js 15 app in `packages/ui/` with TypeScript, Tailwind, App Router
-- [ ] Install: `zustand` (state), `ws` (WebSocket client — native fine), `date-fns`, `lucide-react` (icons)
-- [ ] Create `src/lib/shared.ts` re-exporting types from `packages/shared/`
-- [ ] Add `npm run demo` script that starts UI with `FIXTURE_MODE=1`
+### Landing page `/`
+- [ ] Port `mockups/landing.html` markup into `app/(marketing)/page.tsx`
+- [ ] Sticky nav with backdrop-blur
+- [ ] Hero + demo window (static content, no live data)
+- [ ] Agent roster grid (7 cards including Replay QA, Service Watcher, dashed "custom" tile)
+- [ ] Bug-fix loop feature strip
+- [ ] Pricing tiers (Hobbyist $0 · Founder $49 featured · Scale $199)
+- [ ] FAQ (6 questions)
+- [ ] All "Start Building" CTAs link to `/home`
 
-### Layout — one screen, no routing
+### Home page `/home`
+- [ ] Port `mockups/home.html` markup
+- [ ] Prompt input component
+  - [ ] `⌘⏎` shortcut launches
+  - [ ] Example chips populate input
+  - [ ] On submit: `POST /api/business` with `idempotency_key` from `crypto.randomUUID()`
+  - [ ] On response: `router.push(\`/project/\${project_id}\`)`
+- [ ] Project list via `GET /api/businesses`
+- [ ] Auto-refresh list every 5s (SWR or simple polling)
+- [ ] Empty state hint at bottom
 
-- [ ] Top bar: logo/name "AutoBusiness", input box "Describe your business idea…", "Launch" button
-- [ ] Four-panel grid below, responsive:
-  - **Left col (60%):** Agent Trace Stream, grouped by agent, live
-  - **Right col (40%) top:** Business Status card (URL, QR, Stripe balance, status pill)
-  - **Right col (40%) middle:** Decision Log (list of DecisionRecord cards)
-  - **Right col (40%) bottom:** Owner Notifications (Linq iMessage previews)
+### Project page `/project/[id]`
+- [ ] Port `mockups/project.html` layout (status bar, lanes, right column)
+- [ ] Status bar: agents count, memory files, uptime%, turn, elapsed, status pill
+- [ ] Agent lanes rendered from event buffer, grouped by `agent + agent_run_id`
+- [ ] "Builder v2" style version pills when `agent_run_id` differs on same agent
+- [ ] "Replay QA" lane with `bugs_found` / `bugs_fixed` rendering
+- [ ] Decision card (before/after) — the money shot. Render on every `type:"decision"` event.
+- [ ] Right column cards: Revenue (Stripe), Health (Service Watcher), Ship & fix loop, Memory
+- [ ] "Pivot mid-flight" drawer overlay (see `mockups/pivot.html`)
+  - [ ] Owner types → `POST /api/business/:id/message`
+  - [ ] UI shows "queued for turn N+1" state, then absorbs on next `pivot_absorbed` event
+- [ ] SSE hook wired, refresh-safe
 
-### State management
+### Memory page `/project/[id]/memory`
+- [ ] Port `mockups/memory.html`
+- [ ] Fetch `GET /api/business/:id/memory`
+- [ ] File tree left, rendered markdown right
+- [ ] Frontmatter parsed and shown as chips
 
-- [ ] Zustand store `useBusinessStore`:
-  ```typescript
-  {
-    businesses: Record<string, BusinessState>,
-    traces: Record<string, TraceEvent[]>,  // per business_id
-    activeBusinessId: string | null,
-    connect(id): void,     // opens WS, dispatches on incoming
-    createBusiness(idea): Promise<string>,  // POST /api/business
-  }
-  ```
+### Settings page `/settings`
+- [ ] Port `mockups/settings.html` sidebar + integrations grid
+- [ ] Fetch `GET /api/plugins` (catalog) + `GET /api/plugins/config` (masked)
+- [ ] Required / Recommended / More sections
+- [ ] Connect modal per plugin:
+  - [ ] Form fields from `PluginDescriptor.fields` (secret → password input)
+  - [ ] On save: `PUT /api/plugins/:id/config`
+  - [ ] UI never displays raw values, only masked previews returned by server
+  - [ ] Show scopes if `PluginDescriptor.scopes` present
+- [ ] Disconnect button → `DELETE /api/plugins/:id/config`
+- [ ] Green "how keys are stored" note (AES-256, never returned to browser)
 
-### Idea input + business launch
-
-- [ ] Input box wired to `createBusiness()` — calls `POST /api/business` with `{idea}`
-- [ ] On success: switch active business, open WS
-- [ ] Loading state while awaiting `business_id`
-- [ ] Support multiple simultaneous businesses — tabs at top of trace panel
-
-### Trace stream panel — the main event
-
-- [ ] Group events by `agent`. Each agent gets a column or lane (planner, researcher, builder, verifier).
-- [ ] Each event renders as a card:
-  - Icon per `type` (thought=💭, action=⚙️, terac_call=👥, terac_result=✅, decision=🔀, result=📤, error=⚠️)
-  - Timestamp (relative: "2s ago")
-  - Confidence pill if present (color-coded: red <0.4, yellow 0.4-0.6, green >0.6)
-  - Content markdown-rendered
-- [ ] Auto-scroll to bottom on new event; pause auto-scroll when user scrolls up
-- [ ] "Thought" events fade in with a subtle typewriter effect (500ms). Not longer — judges are watching pace.
-
-### Decision Log panel — the money shot
-
-- [ ] Render `DecisionRecord[]` newest-first
-- [ ] Each DecisionRecord is a card with THREE columns:
-  - **Before** — value, confidence pill, reasoning (grey/faded)
-  - **arrow with Terac icon** — "N humans consulted"
-  - **After** — value, confidence pill, reasoning (highlighted/green)
-- [ ] Animate the card sliding in when it arrives
-- [ ] Clicking the card expands to show Terac responses (from metadata)
-- [ ] **This is the single most important visual in the demo. Make it beautiful.**
-
-### Business Status card
-
-- [ ] Status pill (planning / researching / building / **LIVE** / error) with color
-- [ ] `landing_url` → clickable + QR code (use `qrcode.react`)
-- [ ] `stripe_balance_usd` → big number, animate on change (`$0.00 → $12.00`)
-- [ ] `stripe_payment_link` → "Copy link" button
-
-### Owner Notifications panel
-
-- [ ] Render mock iMessage bubbles (blue) for outgoing "owner alert" traces
-- [ ] Approve/Deny buttons for `metadata.requires_approval: true` events
-- [ ] Approve/Deny action → `POST /api/business/:id/approval` (endpoint owned by Orchestrator; Agent A only calls it)
-
-### Fixture mode (CRITICAL)
-
-- [ ] If `process.env.FIXTURE_MODE === "1"`:
-  - Skip WS, load `fixtures/traces/demo-happy-path.jsonl`
-  - Play events with pacing from `metadata.replay_delay_ms` (default 800ms between events)
-  - Load `fixtures/plans/3d-printer.json` as active plan
-  - Play a fake Stripe balance increment 20s in
-- [ ] Add a hidden "Replay demo" button in dev — clicking it replays the fixture even in live mode. This is your demo escape hatch.
-
-### Multi-business support
-
-- [ ] Tabs above trace panel — one per active business
-- [ ] Clicking a tab switches active traces + status card
-- [ ] Adding a second business mid-session (during demo) must work smoothly
+### Fixture / demo mode
+- [ ] `scripts/dev-with-fixtures.ts` — reads `fixtures/traces/demo-3dprint.jsonl`, spins up a mock SSE server on 4000, replays events in real time. Enables `npm run demo` for the UI alone.
+- [ ] Verify all pages render against the mock
 
 ### Polish
-
-- [ ] Dark mode by default, monospace font on trace content, tight spacing
-- [ ] Loading skeletons for status panels while data is empty
-- [ ] Empty states: "No businesses yet. Type an idea above."
-- [ ] Favicon + tab title
-- [ ] Add fixture "Replay" button somewhere subtle
+- [ ] Every price/count/latency uses `.tabnum`
+- [ ] Every timestamp shows relative ("8m ago") + absolute on hover
+- [ ] Every long URL truncates with middle-ellipsis
+- [ ] All buttons have hover state matching mockups
+- [ ] Escape closes modals and drawers
+- [ ] No emojis in UI text unless explicitly in a memory md file
+- [ ] Lighthouse a11y pass ≥ 90 on `/` and `/home`
 
 ---
 
 ## Definition of Done
-
-- [ ] `npm run demo` in `packages/ui/` opens a UI that plays the fixture trace end-to-end with no backend
-- [ ] Trace stream renders all 8 TraceEvent types with distinct visual treatment
-- [ ] Decision card animation is smooth (60fps in Chrome)
-- [ ] Live mode: connects to orchestrator WS, receives real events, no console errors
-- [ ] Can create a business, watch it run, see decision cards appear, see Stripe balance change
-- [ ] Second business can be added mid-session without breaking the first
-- [ ] Renders correctly at 1440×900 (typical judge laptop) and on a projector at 1920×1080
+- [ ] All six routes render against fixture mock without errors.
+- [ ] Refreshing `/project/[id]` mid-stream does not lose or duplicate events (SSE resume works).
+- [ ] `POST /api/business` with same `idempotency_key` twice pushes to same project.
+- [ ] Pivot input queues, then shows absorbed state after the next `pivot_absorbed` event.
+- [ ] Settings modal saves through `PUT /api/plugins/:id/config` and shows masked preview after save.
+- [ ] Visual diff against `mockups/*.html` is negligible (spacing, colors, typography identical).
+- [ ] `npm run demo` in `packages/ui/` runs against fixtures with zero external deps.
 
 ---
 
 ## Do NOT
-
-- Write files outside `packages/ui/`
-- Change types in `packages/shared/`
-- Add analytics, auth, or a backend
-- Use experimental Tailwind features that break in prod build
-- Introduce heavy chart libraries — this is a trace viewer, not a dashboard
-- Ship with `console.log` spam
-
----
+- Do not add server routes to Next.js. UI is a pure client of the orchestrator.
+- Do not decrypt or handle raw API keys. Server encrypts; UI only sees masked previews.
+- Do not add loading spinners on the project page — the SSE stream is the loading state.
+- Do not use WebSocket. SSE only.
+- Do not import from other `packages/agents/*` or `packages/integrations/`.
 
 ## If stuck
-
-1. Try running against fixtures first. If fixture mode works, live mode is a connection issue not a UI issue.
-2. If orchestrator WS isn't ready by hour 4, keep polishing fixture mode. That's still a winning demo.
-3. If a schema change would unblock you — STOP. Emit blocker. Do not edit `packages/shared/`.
-
----
+- Missing field on `TraceEvent`? → Escalate per CONTRACTS.md §9. Do not add locally.
+- Orchestrator not running? → Use fixture mock (`npm run demo`).
+- Mockup ambiguous? → Preserve the mockup's exact classes and copy. Screenshot for tie-breakers.
 
 ## Standalone demo
-
 ```bash
 cd packages/ui
-npm install
 npm run demo
-# Opens http://localhost:3000, autoplays fixtures/traces/demo-happy-path.jsonl
+# → boots UI on :3000, mock SSE on :4000, replays 3D-printer demo trace
 ```
-
-Expected output: full 40-event trace plays through in ~45 seconds, 2 decision cards animate in, Stripe balance climbs from $0 to $24, status pill goes planning → researching → building → LIVE.

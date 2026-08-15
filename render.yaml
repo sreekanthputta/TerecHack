@@ -1,0 +1,95 @@
+# Render Blueprint — AutoBusiness
+# Docs: https://render.com/docs/blueprint-spec
+#
+# What ships today: static-site mockups so judges can see the UI vision.
+# What ships later: the three real services (UI, orchestrator, integrations)
+# once their packages/ are coded. Add them as sibling entries in `services:`.
+
+services:
+  # ---- MOCKUPS (available now) --------------------------------------------
+  - type: web
+    runtime: static
+    name: autobusiness-mockups
+    plan: free
+    branch: main
+    rootDir: mockups
+    buildCommand: ""              # pure HTML, nothing to build
+    staticPublishPath: .          # serve mockups/ as-is
+    autoDeploy: true              # push to main → redeploy
+    pullRequestPreviewsEnabled: true
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+    routes:
+      - type: rewrite
+        source: /
+        destination: /index.html
+
+  # ---- FUTURE: uncomment as each package is scaffolded --------------------
+  #
+  # - type: web
+  #   runtime: node
+  #   name: autobusiness-ui
+  #   plan: starter
+  #   branch: main
+  #   rootDir: packages/ui
+  #   buildCommand: npm ci && npm run build
+  #   startCommand: npm start
+  #   autoDeploy: true
+  #   envVars:
+  #     - key: NEXT_PUBLIC_APP_URL
+  #       sync: false
+  #     - key: ORCH_URL
+  #       sync: false
+  #
+  # - type: web
+  #   runtime: node
+  #   name: autobusiness-orchestrator
+  #   plan: starter
+  #   branch: main
+  #   rootDir: packages/orchestrator
+  #   buildCommand: npm ci && npm run build
+  #   startCommand: npm start
+  #   autoDeploy: true
+  #   healthCheckPath: /health
+  #   disk:
+  #     name: autobiz-data
+  #     mountPath: /data          # SQLite + memory tree live here
+  #     sizeGB: 1
+  #   envVars:
+  #     - key: DATABASE_URL
+  #       value: file:/data/autobiz.db
+  #     - key: ANTHROPIC_API_KEY
+  #       sync: false
+  #     - key: STRIPE_RESTRICTED_KEY
+  #       sync: false             # must be rk_, orchestrator refuses sk_
+  #     - key: ENCRYPTION_KEY
+  #       generateValue: true     # 32-byte hex for plugin secret AES-256-GCM
+  #
+  # - type: web
+  #   runtime: node
+  #   name: autobusiness-integrations
+  #   plan: starter
+  #   branch: main
+  #   rootDir: packages/integrations
+  #   buildCommand: npm ci && npm run build
+  #   startCommand: npm start
+  #   autoDeploy: true
+  #   envVars:
+  #     - key: TERAC_API_KEY
+  #       sync: false
+  #     - key: RENDER_API_KEY
+  #       sync: false
+  #     - key: REPLAY_API_KEY
+  #       sync: false             # lqa_... Loop QA token
+  #     - key: SUPERSERVE_API_KEY
+  #       sync: false
+  #     - key: LINQ_API_KEY
+  #       sync: false

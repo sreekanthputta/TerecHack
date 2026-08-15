@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AutoBusiness — 3D printer idle</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0A0A0A; --surface:#111112; --surface-2:#17171A; --surface-3:#1D1D21;
+    --border:rgba(255,255,255,0.06); --border-strong:rgba(255,255,255,0.10);
+    --text:#E8E8EA; --text-dim:#9A9AA1; --text-faint:#6B6B72;
+    --violet:#8B5CF6; --violet-glow:rgba(139,92,246,0.35);
+    --emerald:#10B981; --amber:#F59E0B; --rose:#F43F5E; --sky:#38BDF8;
+  }
+  * { -webkit-font-smoothing:antialiased; }
+  html,body { background:var(--bg); color:var(--text); font-family:'Inter',ui-sans-serif,system-ui,sans-serif; font-feature-settings:'cv11','ss01'; }
+  .mono { font-family:'JetBrains Mono',ui-monospace,monospace; }
+  .serif { font-family:'Instrument Serif',ui-serif,Georgia,serif; letter-spacing:-0.015em; }
+  .tabnum { font-variant-numeric:tabular-nums; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  .card-tight { background:var(--surface); border:1px solid var(--border); border-radius:10px; }
+  .surface-2 { background:var(--surface-2); }
+  .surface-3 { background:var(--surface-3); }
+  .divider { border-color:var(--border); }
+  .text-dim { color:var(--text-dim); }
+  .text-faint { color:var(--text-faint); }
+  .accent-bg { background:var(--violet); }
+  .accent-text { color:var(--violet); }
+  .subtle-radial {
+    background:
+      radial-gradient(ellipse 900px 300px at 30% -10%, rgba(139,92,246,0.06), transparent 60%),
+      var(--bg);
+  }
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:500; }
+  .pill-live { background:rgba(16,185,129,0.12); color:#34D399; border:1px solid rgba(16,185,129,0.25); }
+  .pill-low { background:rgba(244,63,94,0.10); color:#FB7185; border:1px solid rgba(244,63,94,0.24); }
+  .pill-mid { background:rgba(245,158,11,0.10); color:#FBBF24; border:1px solid rgba(245,158,11,0.22); }
+  .pill-high { background:rgba(16,185,129,0.12); color:#34D399; border:1px solid rgba(16,185,129,0.25); }
+  .pill-terac { background:rgba(139,92,246,0.10); color:#C4B5FD; border:1px solid rgba(139,92,246,0.28); }
+  .dot { width:6px; height:6px; border-radius:999px; }
+  .dot-live { background:#34D399; box-shadow:0 0 8px rgba(52,211,153,0.6); animation:pulse 1.6s ease-in-out infinite; }
+  .dot-pulse { animation:pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1);} 50% { opacity:0.55; transform:scale(1.15);} }
+  @keyframes shimmer { 0% { background-position:-200% 0;} 100% { background-position:200% 0;} }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(6px);} to { opacity:1; transform:translateY(0);} }
+  .fade-in { animation:fadeUp 300ms cubic-bezier(0.22,1,0.36,1) both; }
+  .shimmer-border {
+    position:relative;
+    border-radius:14px;
+  }
+  .shimmer-border::before {
+    content:''; position:absolute; inset:-1px; border-radius:14px; padding:1px;
+    background:linear-gradient(90deg, rgba(16,185,129,0.0) 0%, rgba(16,185,129,0.9) 40%, rgba(16,185,129,0.0) 80%);
+    background-size:200% 100%;
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
+    animation:shimmer 1.6s ease-in-out 200ms 1 both;
+    pointer-events:none;
+  }
+  .conf-bar { height:6px; border-radius:999px; background:var(--surface-3); overflow:hidden; }
+  .conf-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,#F43F5E,#F59E0B,#10B981); }
+  .agent-lane { border-left:1px solid var(--border); padding-left:16px; position:relative; }
+  .agent-lane::before {
+    content:''; position:absolute; left:-4px; top:0; width:7px; height:7px; border-radius:999px;
+  }
+  .lane-planner::before { background:#38BDF8; box-shadow:0 0 0 3px rgba(56,189,248,0.15); }
+  .lane-researcher::before { background:#C4B5FD; box-shadow:0 0 0 3px rgba(139,92,246,0.18); }
+  .lane-verifier::before { background:#F0ABFC; box-shadow:0 0 0 3px rgba(232,121,249,0.15); }
+  .lane-builder::before { background:#FBBF24; box-shadow:0 0 0 3px rgba(245,158,11,0.15); }
+  .lane-replay::before { background:#22D3EE; box-shadow:0 0 0 3px rgba(34,211,238,0.18); }
+  .lane-cron::before { background:#34D399; box-shadow:0 0 0 3px rgba(52,211,153,0.15); }
+  .pill-bug { background:rgba(244,63,94,0.10); color:#FB7185; border:1px solid rgba(244,63,94,0.24); }
+  .pill-fix { background:rgba(34,211,238,0.10); color:#67E8F9; border:1px solid rgba(34,211,238,0.24); }
+  .pill-cyan { background:rgba(34,211,238,0.10); color:#67E8F9; border:1px solid rgba(34,211,238,0.24); }
+  .qr-grid {
+    display:grid; grid-template-columns: repeat(21, 1fr); gap:1px;
+    width:100%; aspect-ratio:1/1; background:var(--surface-3); padding:8px; border-radius:8px;
+  }
+  .qr-grid > span { background:transparent; }
+  .qr-grid > span.on { background:white; }
+  .glass-before { background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.005)); border:1px solid var(--border); }
+  .glass-after { background:linear-gradient(180deg,rgba(16,185,129,0.06),rgba(16,185,129,0.015)); border:1px solid rgba(16,185,129,0.22); }
+  .strike-diag {
+    position:relative; overflow:hidden;
+  }
+  .strike-diag::after {
+    content:'REPLACED'; position:absolute; top:12px; right:-30px;
+    font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:2px;
+    background:rgba(244,63,94,0.15); color:#FB7185; padding:2px 34px;
+    transform:rotate(35deg); border:1px solid rgba(244,63,94,0.3);
+  }
+</style>
+</head>
+<body class="subtle-radial min-h-screen">
+
+<!-- TOP NAV -->
+<div class="border-b divider">
+  <div class="max-w-[1400px] mx-auto px-8 h-14 flex items-center gap-4">
+    <a href="./home.html" class="flex items-center gap-2 text-dim hover:text-white transition-colors">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+      <span class="text-sm">Projects</span>
+    </a>
+    <div class="h-4 w-px surface-3"></div>
+    <span class="text-sm font-medium truncate">3D printer sitting idle for a month, make me money</span>
+    <span class="pill pill-live ml-auto"><span class="dot dot-live"></span>LIVE</span>
+    <div class="text-xs mono text-faint tabnum">proj_k3n2p9xa</div>
+  </div>
+</div>
+
+<!-- HEADER STATUS BAR -->
+<div class="max-w-[1400px] mx-auto px-8 pt-6 pb-4">
+  <div class="flex items-baseline gap-6">
+    <div>
+      <div class="text-xs text-faint mono uppercase tracking-wider mb-1">Stripe balance</div>
+      <div class="serif text-6xl tabnum flex items-baseline gap-1">
+        <span class="text-white">$24</span>
+        <span class="text-faint text-3xl">.00</span>
+      </div>
+    </div>
+    <div class="text-xs text-faint mono flex items-center gap-3">
+      <span class="text-emerald-400">+$12.00</span>
+      <span>·</span>
+      <span>30s ago</span>
+      <span>·</span>
+      <span>2 charges</span>
+    </div>
+
+    <div class="ml-auto flex items-center gap-6 text-sm text-dim">
+      <div><span class="text-white font-semibold tabnum">6</span> agents</div>
+      <div><span class="text-white font-semibold tabnum">22</span> memory files</div>
+      <div><span class="text-white font-semibold tabnum">2</span> decisions</div>
+      <div><span class="text-emerald-400 font-semibold tabnum">100%</span> uptime</div>
+      <div class="text-xs mono text-faint">turn <span class="text-white tabnum">9</span> · 11m elapsed</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="max-w-[1400px] mx-auto px-8 pb-16 grid grid-cols-12 gap-6">
+
+  <!-- LEFT: TRACE STREAM -->
+  <div class="col-span-7 space-y-4">
+
+    <div class="flex items-center gap-3">
+      <h2 class="text-sm font-semibold tracking-widest uppercase text-dim">Agent Traces</h2>
+      <div class="flex-1 h-px divider border-t"></div>
+      <div class="flex items-center gap-2 text-xs mono text-faint">
+        <div class="dot dot-live"></div>
+        <span>streaming · SSE #4231</span>
+      </div>
+    </div>
+
+    <!-- AGENT LANES -->
+    <div class="space-y-5">
+
+      <!-- LANE: PLANNER -->
+      <div class="agent-lane lane-planner">
+        <div class="flex items-center gap-2 mb-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          <span class="text-sm font-semibold" style="color:#7DD3FC;">Planner</span>
+          <span class="text-xs mono text-faint">1 event</span>
+        </div>
+        <div class="space-y-2">
+          <div class="card p-3 text-sm">
+            <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2a7 7 0 017 7c0 3-2 5-2 8v1a2 2 0 01-2 2h-2a2 2 0 01-2-2v-1c0-3-2-5-2-8a7 7 0 017-7z"/></svg>
+              <span>thought</span>
+              <span class="ml-auto tabnum">8m ago</span>
+            </div>
+            <div>Understood the goal: monetize an idle 3D printer for a month. Drafting 4-step plan: research niches → validate with makers → build storefront → verify pre-launch.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LANE: RESEARCHER -->
+      <div class="agent-lane lane-researcher">
+        <div class="flex items-center gap-2 mb-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+          <span class="text-sm font-semibold" style="color:#DDD6FE;">Researcher</span>
+          <span class="text-xs mono text-faint">4 events · Superserve sandbox</span>
+        </div>
+        <div class="space-y-2">
+          <div class="card p-3 text-sm">
+            <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09A1.65 1.65 0 0015 4.6a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09A1.65 1.65 0 0019.4 15z"/></svg>
+              <span>action</span>
+              <span class="ml-auto tabnum">7m ago</span>
+            </div>
+            <div>Spinning up Superserve sandbox · browsing Etsy top-100 &lt;$25 · cross-referencing r/3Dprinting best-sellers.</div>
+          </div>
+          <div class="card p-3 text-sm">
+            <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2a7 7 0 017 7c0 3-2 5-2 8v1a2 2 0 01-2 2h-2a2 2 0 01-2-2v-1c0-3-2-5-2-8a7 7 0 017-7z"/></svg>
+              <span>thought</span>
+              <span class="ml-auto tabnum">6m ago</span>
+            </div>
+            <div>Three candidates emerging: cable organizers, phone stands, planter pots. Signal quality mixed — Etsy scrape is noisy, small sample.</div>
+          </div>
+          <div class="card p-3 text-sm">
+            <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20l9-16H3z" transform="rotate(180 12 12)"/></svg>
+              <span>result</span>
+              <span class="ml-auto tabnum">5m ago</span>
+              <span class="pill pill-low ml-2">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 8v4M12 16h.01"/><circle cx="12" cy="12" r="10"/></svg>
+                conf 0.50
+              </span>
+            </div>
+            <div class="mb-2">Top pick: <span class="mono">cable organizers</span> — but confidence 0.50 due to thin evidence.</div>
+            <div class="conf-bar mb-1"><div class="conf-fill" style="width:50%;"></div></div>
+            <div class="text-xs text-faint mono flex justify-between"><span>0.0</span><span>threshold 0.60</span><span>1.0</span></div>
+            <div class="mt-2 text-xs text-faint">→ wrote <span class="mono text-dim">memory/researcher/niche-analysis.md</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LANE: VERIFIER -->
+      <div class="agent-lane lane-verifier">
+        <div class="flex items-center gap-2 mb-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F0ABFC" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <span class="text-sm font-semibold" style="color:#F5D0FE;">Verifier</span>
+          <span class="text-xs mono text-faint">3 events · Terac loop</span>
+        </div>
+        <div class="space-y-2">
+          <div class="card p-3 text-sm">
+            <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2a7 7 0 017 7c0 3-2 5-2 8v1a2 2 0 01-2 2h-2a2 2 0 01-2-2v-1c0-3-2-5-2-8a7 7 0 017-7z"/></svg>
+              <span>thought</span>
+              <span class="ml-auto tabnum">5m ago</span>
+            </div>
+            <div>Confidence 0.50 on niche-viability &lt; threshold. Consulting 15 real makers via Terac.</div>
+          </div>
+          <div class="card p-3 text-sm">
+            <div class="flex items-center gap-2 mb-2 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              <span class="text-violet-300" style="color:#C4B5FD;">terac_call</span>
+              <span class="ml-auto tabnum">5m ago</span>
+              <span class="pill pill-terac">Terac study · 15 makers</span>
+            </div>
+            <div class="mono text-xs surface-2 rounded-md p-2.5 mb-2" style="color:#DDD6FE;">Q: "You have a 3D printer. Which of these do you think will actually sell — cable organizers, phone stands, or planter pots? One sentence why."</div>
+            <div class="text-xs text-faint">why asking: researcher confidence 0.50, single-source evidence</div>
+          </div>
+          <div class="card p-3 text-sm">
+            <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              <span style="color:#34D399;">terac_result</span>
+              <span class="ml-auto tabnum">3m ago</span>
+            </div>
+            <div class="mb-1">12 of 15 makers picked <span class="mono">cable organizers</span> — citing consistent demand and shortest print time.</div>
+            <div class="text-xs text-faint">3 minutes 12 seconds to result · avg time per response 42s</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LANE: BUILDER v1 -->
+      <div class="agent-lane lane-builder">
+        <div class="flex items-center gap-2 mb-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2"><path d="M3 6l9-4 9 4v6c0 5-3.5 9-9 10-5.5-1-9-5-9-10V6z"/></svg>
+          <span class="text-sm font-semibold" style="color:#FCD34D;">Builder</span>
+          <span class="text-xs mono text-faint">v1 · initial ship</span>
+        </div>
+        <div class="space-y-2">
+          <div class="card p-3 text-sm">
+            <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              <span>action</span>
+              <span class="ml-auto tabnum">5m ago</span>
+            </div>
+            <div>Generating landing page "CableCraft" · template <span class="mono">minimal-product</span> · 3 SKUs · hero copy from Terac-winning headline.</div>
+          </div>
+          <div class="card p-3 text-sm">
+            <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              <span style="color:#FCD34D;">deployed v1</span>
+              <span class="ml-auto tabnum">4m ago</span>
+            </div>
+            <div class="mb-1">Live at <span class="mono" style="color:#C4B5FD;">cablecraft-k3n2.onrender.com</span> · Stripe link created · <span class="mono">$12</span>/unit.</div>
+            <div class="text-xs text-faint">→ handing off to Replay QA for smoke tests before we call it done</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LANE: REPLAY QA (v1 — bugs found) -->
+      <div class="agent-lane lane-replay">
+        <div class="flex items-center gap-2 mb-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#67E8F9" stroke-width="2"><path d="M4 12a8 8 0 018-8v0a8 8 0 018 8v0a8 8 0 01-8 8v0a8 8 0 01-8-8z"/><path d="M9 9l6 3-6 3z" fill="#67E8F9"/></svg>
+          <span class="text-sm font-semibold" style="color:#A5F3FC;">Replay QA</span>
+          <span class="text-xs mono text-faint">run #1 · headless browser · 17 checks</span>
+        </div>
+        <div class="space-y-2">
+          <div class="card p-3 text-sm">
+            <div class="flex items-center gap-2 mb-2 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82 2 2 0 01-2.83 2.83 1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51 2 2 0 01-4 0 1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33 2 2 0 01-2.83-2.83 1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1 2 2 0 010-4 1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82 2 2 0 012.83-2.83 1.65 1.65 0 001.82.33 1.65 1.65 0 001-1.51 2 2 0 014 0 1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33 2 2 0 012.83 2.83 1.65 1.65 0 00-.33 1.82 1.65 1.65 0 001.51 1 2 2 0 010 4 1.65 1.65 0 00-1.51 1z"/></svg>
+              <span>action</span>
+              <span class="ml-auto tabnum">4m ago</span>
+            </div>
+            <div>Walking the site as a first-time buyer · 17 assertions · landing, product grid, cart, checkout, mobile viewport.</div>
+          </div>
+          <div class="card p-3 text-sm" style="border-color:rgba(244,63,94,0.25); background:linear-gradient(180deg,rgba(244,63,94,0.04),transparent 60%);">
+            <div class="flex items-center gap-2 mb-2 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FB7185" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              <span style="color:#FB7185;">bugs_found</span>
+              <span class="pill pill-bug ml-1">15 pass · 2 fail</span>
+              <span class="ml-auto tabnum">3m ago</span>
+            </div>
+            <div class="mono text-xs surface-2 rounded-md p-2.5 mb-2 space-y-1">
+              <div class="flex items-start gap-2"><span style="color:#FB7185;">✗</span><span class="text-dim"><span style="color:#FB7185;">bug#1</span> · "add to cart" 404s on SKU-2 · missing route <span class="text-faint">/api/cart/monitor-clip</span></span></div>
+              <div class="flex items-start gap-2"><span style="color:#FB7185;">✗</span><span class="text-dim"><span style="color:#FB7185;">bug#2</span> · checkout price missing on mobile viewport &lt;640px · CSS grid collapse</span></div>
+            </div>
+            <div class="text-xs text-faint">→ wrote <span class="mono text-dim">memory/replay/run-1-bugs.md</span> · respawning Builder(v2) with diff</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LANE: BUILDER v2 -->
+      <div class="agent-lane lane-builder">
+        <div class="flex items-center gap-2 mb-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2"><path d="M3 6l9-4 9 4v6c0 5-3.5 9-9 10-5.5-1-9-5-9-10V6z"/></svg>
+          <span class="text-sm font-semibold" style="color:#FCD34D;">Builder</span>
+          <span class="text-xs mono text-faint">v2 · fixing 2 bugs from Replay run #1</span>
+          <span class="pill pill-fix ml-2">retry</span>
+        </div>
+        <div class="space-y-2">
+          <div class="card p-3 text-sm">
+            <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2a7 7 0 017 7c0 3-2 5-2 8v1a2 2 0 01-2 2h-2a2 2 0 01-2-2v-1c0-3-2-5-2-8a7 7 0 017-7z"/></svg>
+              <span>thought</span>
+              <span class="ml-auto tabnum">3m ago</span>
+            </div>
+            <div>Read Replay report. Both bugs are surface-level: missing cart route + mobile CSS regression. Patching in one turn.</div>
+          </div>
+          <div class="card p-3 text-sm">
+            <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              <span style="color:#34D399;">deployed v2</span>
+              <span class="ml-auto tabnum">2m ago</span>
+              <span class="pill pill-high ml-2">2 fixes shipped</span>
+            </div>
+            <div class="mb-1">Added <span class="mono text-faint">/api/cart/[sku]</span> handler · fixed mobile checkout grid at 640px breakpoint.</div>
+            <div class="text-xs text-faint">→ re-triggering Replay QA</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LANE: REPLAY QA (v2 — clean) -->
+      <div class="agent-lane lane-replay">
+        <div class="flex items-center gap-2 mb-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#67E8F9" stroke-width="2"><path d="M4 12a8 8 0 018-8v0a8 8 0 018 8v0a8 8 0 01-8 8v0a8 8 0 01-8-8z"/><path d="M9 9l6 3-6 3z" fill="#67E8F9"/></svg>
+          <span class="text-sm font-semibold" style="color:#A5F3FC;">Replay QA</span>
+          <span class="text-xs mono text-faint">run #2 · re-verification</span>
+        </div>
+        <div class="space-y-2">
+          <div class="card p-3 text-sm">
+            <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              <span style="color:#34D399;">shipped clean</span>
+              <span class="pill pill-high ml-1">17 / 17 pass</span>
+              <span class="ml-auto tabnum">2m ago</span>
+            </div>
+            <div class="mb-1">All checks green · median latency 240ms · Stripe webhook echoes 200.</div>
+            <div class="text-xs text-faint">→ <span class="mono">status=live</span> · handing off to Revenue + Service Watchers</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CRON SECTION (2 watchers) -->
+      <div class="mt-2 pt-3 border-t divider">
+        <div class="flex items-center gap-2 mb-4 text-xs mono text-faint uppercase tracking-wider">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <span>cron agents · running while the business is live</span>
+        </div>
+
+        <!-- REVENUE WATCHER -->
+        <div class="agent-lane lane-cron mb-5">
+          <div class="flex items-center gap-2 mb-3">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            <span class="text-sm font-semibold" style="color:#6EE7B7;">RevenueWatcher</span>
+            <span class="text-xs mono text-faint">Stripe · 30s tick</span>
+          </div>
+          <div class="space-y-2">
+            <div class="card p-3 text-sm fade-in">
+              <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                <span style="color:#34D399;">sale detected</span>
+                <span class="ml-auto tabnum">30s ago</span>
+              </div>
+              <div>+$12.00 · charge <span class="mono text-faint">ch_3O4x…zK</span> · card 4242 · balance now $24.00</div>
+              <div class="text-xs text-faint mt-1">→ iMessage sent to owner: "🎉 CableCraft · sale #2 · $24 total"</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SERVICE WATCHER -->
+        <div class="agent-lane lane-cron">
+          <div class="flex items-center gap-2 mb-3">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+            <span class="text-sm font-semibold" style="color:#6EE7B7;">ServiceWatcher</span>
+            <span class="text-xs mono text-faint">uptime + logs + latency · 60s tick</span>
+          </div>
+          <div class="space-y-2">
+            <div class="card p-3 text-sm">
+              <div class="flex items-center gap-2 mb-2 text-xs text-faint mono">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <span style="color:#34D399;">health check</span>
+                <span class="ml-auto tabnum">15s ago</span>
+              </div>
+              <div class="grid grid-cols-4 gap-3 text-xs mono">
+                <div>
+                  <div class="text-faint uppercase tracking-wider text-[10px] mb-0.5">Uptime</div>
+                  <div class="tabnum text-emerald-400 text-sm">100%</div>
+                </div>
+                <div>
+                  <div class="text-faint uppercase tracking-wider text-[10px] mb-0.5">p95 latency</div>
+                  <div class="tabnum text-white text-sm">240<span class="text-faint">ms</span></div>
+                </div>
+                <div>
+                  <div class="text-faint uppercase tracking-wider text-[10px] mb-0.5">Errors 5m</div>
+                  <div class="tabnum text-emerald-400 text-sm">0</div>
+                </div>
+                <div>
+                  <div class="text-faint uppercase tracking-wider text-[10px] mb-0.5">Requests</div>
+                  <div class="tabnum text-white text-sm">142</div>
+                </div>
+              </div>
+            </div>
+            <div class="card p-3 text-sm">
+              <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                <span style="color:#FBBF24;">log signal</span>
+                <span class="ml-auto tabnum">45s ago</span>
+              </div>
+              <div class="mono text-xs surface-2 rounded p-2 text-dim">3× <span class="text-faint">TypeError: cannot read 'variant'</span> · non-fatal · route <span class="text-faint">/products/desk-trough</span></div>
+              <div class="text-xs text-faint mt-1">→ below threshold · watching · would file bug at &gt;10 in 5m</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- pending indicator -->
+    <div class="flex items-center gap-2 pt-2 text-xs text-faint mono">
+      <div class="dot dot-live"></div>
+      <span>Watchers running · site healthy · next Service tick in 45s · Verifier queued for pre-launch A/B headline study</span>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: STATUS + DECISIONS -->
+  <div class="col-span-5 space-y-6">
+
+    <!-- BUSINESS STATUS CARD -->
+    <div class="card p-5">
+      <div class="flex items-center gap-3 mb-4">
+        <h3 class="text-sm font-semibold tracking-widest uppercase text-dim">Business</h3>
+        <span class="pill pill-live"><span class="dot dot-live"></span>LIVE</span>
+      </div>
+      <div class="serif text-3xl mb-1">CableCraft</div>
+      <div class="text-sm text-dim mb-4">Untangle your desk in 30 seconds — printed to order.</div>
+      <div class="flex items-center gap-3 text-sm mb-5">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg>
+        <a class="mono text-sm hover:underline" style="color:#C4B5FD;">cablecraft-k3n2.onrender.com</a>
+        <button class="text-xs text-faint hover:text-white ml-auto flex items-center gap-1">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
+          copy
+        </button>
+      </div>
+
+      <!-- QR block -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="surface-2 border divider rounded-lg p-4 flex items-center justify-center">
+          <div class="qr-grid">
+            <script>
+              // deterministic pseudo-QR: 21x21 grid, filled by hash
+              const cells = 21*21;
+              const out = [];
+              // three fiducial corners
+              function fid(x,y){for(let i=0;i<7;i++)for(let j=0;j<7;j++){const on = i===0||i===6||j===0||j===6||(i>=2&&i<=4&&j>=2&&j<=4); out.push([x+j,y+i, on]);}}
+              const filled = new Set();
+              const fmarks=[[0,0],[14,0],[0,14]];
+              fmarks.forEach(([x,y])=>fid(x,y));
+              const arr = Array(cells).fill(false);
+              // set fiducials
+              function idx(x,y){return y*21+x;}
+              for(let y=0;y<21;y++)for(let x=0;x<21;x++){
+                let inFid=false;
+                for(const [fx,fy] of fmarks){
+                  if(x>=fx&&x<fx+7&&y>=fy&&y<fy+7){
+                    inFid = (x-fx===0||x-fx===6||y-fy===0||y-fy===6||(x-fx>=2&&x-fx<=4&&y-fy>=2&&y-fy<=4));
+                    break;
+                  }
+                }
+                if(inFid){ arr[idx(x,y)]=true; continue;}
+                // random-ish with seed
+                arr[idx(x,y)] = ((x*13 + y*7 + (x^y)*3) % 5) < 2;
+              }
+              document.write(arr.map(v=>`<span class="${v?'on':''}"></span>`).join(''));
+            </script>
+          </div>
+        </div>
+        <div>
+          <div class="text-xs text-faint mono uppercase tracking-wider mb-1">Scan to buy</div>
+          <div class="serif text-4xl tabnum mb-1">$12.00</div>
+          <div class="text-xs text-dim mb-3">per unit · ships in 3-5 days</div>
+          <div class="text-xs mono text-faint space-y-1">
+            <div>· 2 charges</div>
+            <div>· 0 refunds</div>
+            <div>· stripe: <span class="text-emerald-400">healthy</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DECISION CARDS -->
+    <div>
+      <div class="flex items-center gap-3 mb-4">
+        <h3 class="text-sm font-semibold tracking-widest uppercase text-dim">Decisions from Terac</h3>
+        <div class="flex-1 h-px divider border-t"></div>
+        <span class="text-xs mono text-faint tabnum">2 decisions · 35 humans consulted</span>
+      </div>
+
+      <!-- DECISION CARD (MONEY SHOT) -->
+      <div class="card shimmer-border p-5 mb-4">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="pill pill-terac">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            niche-viability
+          </span>
+          <span class="text-xs mono text-faint tabnum">15 makers · 12 agree · 3m 12s</span>
+          <span class="text-xs mono text-faint ml-auto">2m ago</span>
+        </div>
+
+        <div class="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
+          <!-- BEFORE -->
+          <div class="glass-before strike-diag rounded-lg p-3">
+            <div class="text-xs text-faint mono mb-2 uppercase tracking-wider">Before</div>
+            <div class="mono text-lg mb-2 line-through text-dim">cable organizers</div>
+            <div class="text-xs text-dim mb-2">Etsy top-100 scrape, thin signal, single source.</div>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 conf-bar"><div class="conf-fill" style="width:50%;"></div></div>
+              <span class="text-xs mono tabnum" style="color:#FB7185;">0.50</span>
+            </div>
+          </div>
+
+          <!-- ARROW -->
+          <div class="flex flex-col items-center gap-2">
+            <div class="h-8 w-8 rounded-full flex items-center justify-center" style="background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.35);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2.2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </div>
+
+          <!-- AFTER -->
+          <div class="glass-after rounded-lg p-3">
+            <div class="text-xs mono mb-2 uppercase tracking-wider" style="color:#34D399;">After · Terac validated</div>
+            <div class="mono text-lg font-semibold mb-2" style="color:#6EE7B7;">cable organizers ✓</div>
+            <div class="text-xs text-dim mb-2">"Cable organizers sell year-round, forgiving to print, best $/hour." — 12 of 15 makers</div>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 conf-bar"><div class="conf-fill" style="width:85%;"></div></div>
+              <span class="text-xs mono tabnum" style="color:#34D399;">0.85</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="mt-4 text-xs mono text-faint hover:text-white flex items-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          see 15 responses
+        </button>
+      </div>
+
+      <!-- DECISION CARD 2 -->
+      <div class="card p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="pill pill-terac">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            headline
+          </span>
+          <span class="text-xs mono text-faint tabnum">20 general · 14 pick B · 2m 44s</span>
+          <span class="text-xs mono text-faint ml-auto">1m ago</span>
+        </div>
+
+        <div class="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
+          <div class="glass-before strike-diag rounded-lg p-3">
+            <div class="text-xs text-faint mono mb-2 uppercase tracking-wider">Before</div>
+            <div class="text-sm mb-2 line-through text-dim">"Premium 3D-printed cable management solutions."</div>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 conf-bar"><div class="conf-fill" style="width:45%;"></div></div>
+              <span class="text-xs mono tabnum" style="color:#FB7185;">0.45</span>
+            </div>
+          </div>
+          <div class="flex flex-col items-center gap-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </div>
+          <div class="glass-after rounded-lg p-3">
+            <div class="text-xs mono mb-2 uppercase tracking-wider" style="color:#34D399;">After · Terac validated</div>
+            <div class="text-sm font-medium mb-2" style="color:#E8E8EA;">"Untangle your desk in 30 seconds — printed to order."</div>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 conf-bar"><div class="conf-fill" style="width:82%;"></div></div>
+              <span class="text-xs mono tabnum" style="color:#34D399;">0.82</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHIP & FIX LOOP -->
+    <div class="card p-5">
+      <div class="flex items-center gap-3 mb-4">
+        <h3 class="text-sm font-semibold tracking-widest uppercase text-dim">Ship & fix loop</h3>
+        <div class="flex-1 h-px divider border-t"></div>
+        <span class="text-xs mono text-faint tabnum">2 cycles · 92s median</span>
+      </div>
+      <div class="space-y-2 mono text-xs">
+        <div class="flex items-center gap-2 surface-2 rounded p-2">
+          <span class="pill pill-fix text-[10px]">v1</span>
+          <span class="text-dim">Builder deployed</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#6B6B72" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          <span class="text-dim">Replay QA</span>
+          <span class="pill pill-bug text-[10px] ml-auto">2 bugs</span>
+        </div>
+        <div class="flex items-center gap-2 surface-2 rounded p-2">
+          <span class="pill pill-fix text-[10px]">v2</span>
+          <span class="text-dim">Builder patched</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#6B6B72" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          <span class="text-dim">Replay QA</span>
+          <span class="pill pill-high text-[10px] ml-auto">17 / 17 ✓</span>
+        </div>
+        <div class="flex items-center gap-2 pt-2 text-xs text-faint">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+          <span>ServiceWatcher active · uptime 100% · <span class="tabnum">240ms</span> p95 · <span class="tabnum">0</span> errors last 5m</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEMORY -->
+    <a href="./memory.html" class="card p-4 flex items-center gap-3 hover:border-white/20 transition-colors">
+      <div class="h-9 w-9 rounded-md surface-2 border divider flex items-center justify-center shrink-0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2"><path d="M4 4h6l2 2h8a2 2 0 012 2v9a3 3 0 01-3 3H4a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+      </div>
+      <div class="flex-1">
+        <div class="text-sm font-medium">Agent Memory</div>
+        <div class="text-xs text-faint mono">22 files · last write 15s ago · service/health-latest.md</div>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-faint"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+
+    <!-- MESSAGE INPUT (PIVOT) -->
+    <div class="card p-3">
+      <div class="text-xs text-faint mono uppercase tracking-wider mb-2 px-2 pt-1">Message the project</div>
+      <div class="flex items-center gap-2">
+        <input type="text" placeholder="Pivot, add a constraint, or ask a question…"
+               class="flex-1 bg-transparent outline-none text-sm py-2 px-2 placeholder:text-faint" />
+        <button class="px-3 py-1.5 text-xs rounded-md accent-bg text-white font-medium">Queue</button>
+      </div>
+      <div class="text-xs text-faint mono px-2 pb-1 pt-1">absorbed at next turn boundary · won't kill running work</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AutoBusiness — Mockups</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --surface: #111112;
+    --surface-2: #17171A;
+    --border: rgba(255,255,255,0.06);
+    --border-strong: rgba(255,255,255,0.10);
+    --text: #E8E8EA;
+    --text-dim: #9A9AA1;
+    --text-faint: #6B6B72;
+    --violet: #8B5CF6;
+    --violet-glow: rgba(139,92,246,0.35);
+    --emerald: #10B981;
+    --amber: #F59E0B;
+    --rose: #F43F5E;
+  }
+  * { -webkit-font-smoothing: antialiased; }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: 'cv11','ss01';
+  }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  .serif { font-family: 'Instrument Serif', ui-serif, Georgia, serif; letter-spacing: -0.01em; }
+  .tabnum { font-variant-numeric: tabular-nums; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .surface-2 { background: var(--surface-2); }
+  .divider { border-color: var(--border); }
+  .text-dim { color: var(--text-dim); }
+  .text-faint { color: var(--text-faint); }
+  .accent-bg { background: var(--violet); }
+  .accent-text { color: var(--violet); }
+  .glow-ring {
+    box-shadow: 0 0 0 1px var(--violet), 0 0 24px 2px var(--violet-glow);
+  }
+  .subtle-radial {
+    background:
+      radial-gradient(ellipse 1200px 400px at 50% -10%, rgba(139,92,246,0.08), transparent 60%),
+      var(--bg);
+  }
+</style>
+</head>
+<body class="subtle-radial min-h-screen">
+
+<div class="max-w-6xl mx-auto px-8 py-10">
+  <div class="flex items-center gap-3 mb-2">
+    <div class="h-9 w-9 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#8B5CF6,#5B21B6);">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M12 3v18M3 12h18"/></svg>
+    </div>
+    <span class="text-lg font-semibold tracking-tight">AutoBusiness</span>
+    <span class="text-faint text-sm mono">v0.1 · terac hackathon</span>
+  </div>
+
+  <h1 class="serif text-6xl md:text-7xl leading-[0.95] mt-8 mb-4">Turn any idea<br/>into a running business.</h1>
+  <p class="text-dim max-w-xl text-lg">Type a business idea. Agents research, build, market, and take payments. When they're unsure, they ask real humans via Terac — not other LLMs.</p>
+
+  <!-- Mockup index -->
+  <div class="grid md:grid-cols-3 gap-6 mt-16">
+
+    <a href="./landing.html" class="card p-6 hover:border-white/20 transition-colors">
+      <div class="flex items-center gap-2 mb-4">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
+        <span class="text-xs mono text-faint">00 · marketing</span>
+      </div>
+      <div class="font-semibold mb-1">Landing</div>
+      <div class="text-sm text-dim mb-4">Startup landing · hero · pricing · FAQ · CTA</div>
+      <div class="text-xs text-faint">landing.html</div>
+    </a>
+
+    <a href="./home.html" class="card p-6 hover:border-white/20 transition-colors">
+      <div class="flex items-center gap-2 mb-4">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span class="text-xs mono text-faint">01 · after sign in</span>
+      </div>
+      <div class="font-semibold mb-1">Dashboard</div>
+      <div class="text-sm text-dim mb-4">Project list + new-idea prompt</div>
+      <div class="text-xs text-faint">home.html</div>
+    </a>
+
+    <a href="./project.html" class="card p-6 hover:border-white/20 transition-colors" style="background:linear-gradient(180deg,rgba(139,92,246,0.06),transparent 40%),var(--surface);">
+      <div class="flex items-center gap-2 mb-4">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>
+        <span class="text-xs mono text-faint">02 · money shot</span>
+        <span class="ml-auto text-[10px] px-2 py-0.5 rounded-full accent-bg text-white uppercase tracking-wider">Star</span>
+      </div>
+      <div class="font-semibold mb-1">Project Live</div>
+      <div class="text-sm text-dim mb-4">Trace stream + decision cards + Stripe balance</div>
+      <div class="text-xs text-faint">project.html</div>
+    </a>
+
+    <a href="./pivot.html" class="card p-6 hover:border-white/20 transition-colors">
+      <div class="flex items-center gap-2 mb-4">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3L4 7l4 4"/><path d="M4 7h12a4 4 0 014 4v0"/><path d="M16 21l4-4-4-4"/><path d="M20 17H8a4 4 0 01-4-4v0"/></svg>
+        <span class="text-xs mono text-faint">03</span>
+      </div>
+      <div class="font-semibold mb-1">Pivot mid-flight</div>
+      <div class="text-sm text-dim mb-4">Queued message, turn-boundary absorption</div>
+      <div class="text-xs text-faint">pivot.html</div>
+    </a>
+
+    <a href="./memory.html" class="card p-6 hover:border-white/20 transition-colors">
+      <div class="flex items-center gap-2 mb-4">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6l2 2h8a2 2 0 012 2v9a3 3 0 01-3 3H4a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+        <span class="text-xs mono text-faint">04</span>
+      </div>
+      <div class="font-semibold mb-1">Agent Memory</div>
+      <div class="text-sm text-dim mb-4">MD files the agents wrote for each project</div>
+      <div class="text-xs text-faint">memory.html</div>
+    </a>
+
+    <a href="./settings.html" class="card p-6 hover:border-white/20 transition-colors">
+      <div class="flex items-center gap-2 mb-4">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9M14 17H5M17 4l3 3-3 3M7 20l-3-3 3-3"/></svg>
+        <span class="text-xs mono text-faint">05</span>
+      </div>
+      <div class="font-semibold mb-1">Settings · Integrations</div>
+      <div class="text-sm text-dim mb-4">Plugin catalog · API-key intake modal · masked keys</div>
+      <div class="text-xs text-faint">settings.html</div>
+    </a>
+
+  </div>
+
+  <div class="mt-16 pt-8 border-t divider text-sm text-faint">
+    <div class="flex flex-wrap gap-x-8 gap-y-2">
+      <span>Inter Variable + JetBrains Mono + Instrument Serif</span>
+      <span>OKLCH neutral-950 base · violet-500 accent</span>
+      <span>SSE-driven · SQLite-backed · refresh-safe</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AutoBusiness — Pivot</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0A0A0A; --surface:#111112; --surface-2:#17171A; --surface-3:#1D1D21;
+    --border:rgba(255,255,255,0.06); --border-strong:rgba(255,255,255,0.10);
+    --text:#E8E8EA; --text-dim:#9A9AA1; --text-faint:#6B6B72;
+    --violet:#8B5CF6; --violet-glow:rgba(139,92,246,0.35);
+    --emerald:#10B981; --amber:#F59E0B; --rose:#F43F5E; --sky:#38BDF8; }
+  * { -webkit-font-smoothing:antialiased; }
+  html,body { background:var(--bg); color:var(--text); font-family:'Inter',ui-sans-serif,system-ui,sans-serif; font-feature-settings:'cv11','ss01'; }
+  .mono { font-family:'JetBrains Mono',ui-monospace,monospace; }
+  .serif { font-family:'Instrument Serif',ui-serif,Georgia,serif; letter-spacing:-0.015em; }
+  .tabnum { font-variant-numeric:tabular-nums; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  .surface-2 { background:var(--surface-2); }
+  .surface-3 { background:var(--surface-3); }
+  .divider { border-color:var(--border); }
+  .text-dim { color:var(--text-dim); }
+  .text-faint { color:var(--text-faint); }
+  .accent-bg { background:var(--violet); }
+  .subtle-radial {
+    background:
+      radial-gradient(ellipse 900px 300px at 30% -10%, rgba(139,92,246,0.06), transparent 60%),
+      var(--bg);
+  }
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:500; }
+  .pill-live { background:rgba(16,185,129,0.12); color:#34D399; border:1px solid rgba(16,185,129,0.25); }
+  .pill-mid { background:rgba(245,158,11,0.10); color:#FBBF24; border:1px solid rgba(245,158,11,0.22); }
+  .pill-pivot { background:rgba(139,92,246,0.12); color:#DDD6FE; border:1px solid rgba(139,92,246,0.30); }
+  .pill-queued { background:rgba(56,189,248,0.10); color:#7DD3FC; border:1px solid rgba(56,189,248,0.22); }
+  .dot { width:6px; height:6px; border-radius:999px; }
+  .dot-live { background:#34D399; box-shadow:0 0 8px rgba(52,211,153,0.6); animation:pulse 1.6s ease-in-out infinite; }
+  .dot-violet { background:#C4B5FD; box-shadow:0 0 8px rgba(139,92,246,0.6); animation:pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1);} 50% { opacity:0.55; transform:scale(1.15);} }
+  .agent-lane { border-left:1px solid var(--border); padding-left:16px; position:relative; }
+  .agent-lane::before { content:''; position:absolute; left:-4px; top:0; width:7px; height:7px; border-radius:999px; }
+  .lane-planner::before { background:#38BDF8; box-shadow:0 0 0 3px rgba(56,189,248,0.15); }
+  .lane-researcher::before { background:#C4B5FD; box-shadow:0 0 0 3px rgba(139,92,246,0.18); }
+  .lane-user::before { background:#F472B6; box-shadow:0 0 0 3px rgba(244,114,182,0.15); }
+  .turn-boundary {
+    height:0; border-top:1px dashed rgba(139,92,246,0.30);
+    position:relative; margin:24px 0;
+  }
+  .turn-boundary span {
+    position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+    background:var(--bg); padding:0 12px; color:#C4B5FD;
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.5px;
+    text-transform:uppercase;
+  }
+</style>
+</head>
+<body class="subtle-radial min-h-screen">
+
+<!-- TOP NAV -->
+<div class="border-b divider">
+  <div class="max-w-[1400px] mx-auto px-8 h-14 flex items-center gap-4">
+    <a href="./home.html" class="flex items-center gap-2 text-dim hover:text-white transition-colors">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+      <span class="text-sm">Projects</span>
+    </a>
+    <div class="h-4 w-px surface-3"></div>
+    <span class="text-sm font-medium truncate">my roommate wants to sell ceramic mugs online</span>
+    <span class="pill pill-mid ml-auto">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 6v6l4 2"/></svg>
+      RESEARCHING
+    </span>
+    <span class="pill pill-pivot">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3l-4 4 4 4M4 7h12a4 4 0 014 4"/></svg>
+      1 PIVOT QUEUED
+    </span>
+    <div class="text-xs mono text-faint tabnum">proj_h4tm9k</div>
+  </div>
+</div>
+
+<!-- PIVOT BANNER -->
+<div class="border-b" style="background:linear-gradient(90deg,rgba(139,92,246,0.10),rgba(139,92,246,0.02)); border-color:rgba(139,92,246,0.25);">
+  <div class="max-w-[1400px] mx-auto px-8 py-3 flex items-center gap-4">
+    <div class="h-8 w-8 rounded-md flex items-center justify-center shrink-0" style="background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.35);">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2.2"><path d="M8 3l-4 4 4 4M4 7h12a4 4 0 014 4v0M16 21l4-4-4-4M20 17H8a4 4 0 01-4-4v0"/></svg>
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-2 mb-0.5">
+        <span class="text-sm font-medium" style="color:#DDD6FE;">Pivot queued</span>
+        <span class="pill pill-queued text-[10px]">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 6v6l4 2"/></svg>
+          absorbing at turn 4
+        </span>
+      </div>
+      <div class="text-xs text-dim mono">"actually switch from mugs to hand-poured candles — same craft feel but higher margin"</div>
+    </div>
+    <div class="text-xs text-faint mono tabnum whitespace-nowrap">queued 12s ago · Researcher finishes current turn ~40s</div>
+    <button class="text-xs text-faint hover:text-white mono flex items-center gap-1">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      cancel
+    </button>
+  </div>
+</div>
+
+<div class="max-w-[1400px] mx-auto px-8 pt-6 pb-16 grid grid-cols-12 gap-6">
+
+  <!-- LEFT: TRACES -->
+  <div class="col-span-7 space-y-4">
+
+    <div class="flex items-center gap-3">
+      <h2 class="text-sm font-semibold tracking-widest uppercase text-dim">Agent Traces</h2>
+      <div class="flex-1 h-px divider border-t"></div>
+      <div class="flex items-center gap-2 text-xs mono text-faint">
+        <div class="dot dot-live"></div>
+        <span>streaming · SSE #892</span>
+      </div>
+    </div>
+
+    <!-- TURN 3 -->
+    <div class="turn-boundary"><span>Turn 3 · in progress</span></div>
+
+    <!-- LANE: RESEARCHER (running current turn) -->
+    <div class="agent-lane lane-researcher">
+      <div class="flex items-center gap-2 mb-3">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+        <span class="text-sm font-semibold" style="color:#DDD6FE;">Researcher</span>
+        <span class="text-xs mono text-faint">running turn 3</span>
+        <div class="ml-2 dot dot-violet"></div>
+      </div>
+      <div class="space-y-2">
+        <div class="card p-3 text-sm">
+          <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2a7 7 0 017 7c0 3-2 5-2 8v1a2 2 0 01-2 2h-2a2 2 0 01-2-2v-1c0-3-2-5-2-8a7 7 0 017-7z"/></svg>
+            <span>thought</span>
+            <span class="ml-auto tabnum">28s ago</span>
+          </div>
+          <div>Cross-referencing Etsy mug listings with subreddit r/pottery top posts of month. Signal is scattered — mugs are seasonal + saturated.</div>
+        </div>
+        <div class="card p-3 text-sm">
+          <div class="flex items-center gap-2 mb-1 text-xs text-faint mono">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+            <span>action</span>
+            <span class="ml-auto tabnum">15s ago</span>
+          </div>
+          <div>Fetching price bands for handmade ceramics · sample size so far: 47 listings.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USER MESSAGE (PIVOT) -->
+    <div class="agent-lane lane-user mt-5">
+      <div class="flex items-center gap-2 mb-3">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F472B6" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+        <span class="text-sm font-semibold" style="color:#F9A8D4;">Owner (you)</span>
+        <span class="text-xs mono text-faint">pivot message</span>
+      </div>
+      <div class="card p-3 text-sm" style="background:linear-gradient(180deg,rgba(244,114,182,0.05),transparent 60%);">
+        <div class="flex items-center gap-2 mb-2 text-xs text-faint mono">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F472B6" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/></svg>
+          <span style="color:#F9A8D4;">message</span>
+          <span class="pill pill-pivot ml-1">will pivot</span>
+          <span class="ml-auto tabnum">12s ago</span>
+        </div>
+        <div class="italic">"actually switch from mugs to hand-poured candles — same craft feel but higher margin"</div>
+        <div class="mt-3 pt-3 border-t divider flex items-center gap-3 text-xs text-faint mono">
+          <span>queued for turn 4 · Researcher finishes current turn first</span>
+          <span class="ml-auto tabnum" style="color:#7DD3FC;">est. 40s</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WHAT WILL HAPPEN NEXT (preview) -->
+    <div class="card p-4 border-dashed" style="border-style:dashed; border-color:rgba(139,92,246,0.30);">
+      <div class="flex items-center gap-2 mb-3">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+        <span class="text-xs mono uppercase tracking-wider" style="color:#C4B5FD;">Turn 4 · Planner will run</span>
+      </div>
+      <ol class="space-y-2 text-sm text-dim">
+        <li class="flex items-start gap-3">
+          <span class="mono text-xs tabnum text-faint mt-0.5">01.</span>
+          <span>Read prior memory: <span class="mono text-dim">memory/researcher/mug-signals.md</span>, <span class="mono text-dim">memory/shared/craft-market.md</span></span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mono text-xs tabnum text-faint mt-0.5">02.</span>
+          <span>Absorb new instruction · re-plan for candles vertical</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mono text-xs tabnum text-faint mt-0.5">03.</span>
+          <span>Salvage what carries over: craft-buyer persona, price-band methodology, Etsy scraping harness</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mono text-xs tabnum text-faint mt-0.5">04.</span>
+          <span>Terminate mug-specific work · spawn candle-specialized Researcher task</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mono text-xs tabnum text-faint mt-0.5">05.</span>
+          <span>Emit <span class="pill pill-pivot text-[10px]">🔀 pivot decision</span> card with before/after plan diff</span>
+        </li>
+      </ol>
+      <div class="mt-4 pt-3 border-t divider text-xs text-faint mono">
+        Because memory is on disk, no context is lost. Agents die, knowledge persists.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: PIVOT DIFF + STATE -->
+  <div class="col-span-5 space-y-6">
+
+    <!-- MESSAGE HISTORY -->
+    <div class="card p-5">
+      <div class="flex items-center gap-3 mb-4">
+        <h3 class="text-sm font-semibold tracking-widest uppercase text-dim">Message History</h3>
+        <div class="flex-1 h-px divider border-t"></div>
+        <span class="text-xs mono text-faint tabnum">2 messages</span>
+      </div>
+      <div class="space-y-3">
+        <div class="flex items-start gap-3">
+          <div class="h-6 w-6 rounded-full surface-2 border divider flex items-center justify-center text-[10px] mono text-faint shrink-0 mt-0.5">01</div>
+          <div class="flex-1">
+            <div class="text-xs text-faint mono mb-0.5">initial · 2m 12s ago · <span style="color:#34D399;">processed</span></div>
+            <div class="text-sm">"my roommate wants to sell ceramic mugs online"</div>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="h-6 w-6 rounded-full flex items-center justify-center text-[10px] mono shrink-0 mt-0.5" style="background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.35); color:#DDD6FE;">02</div>
+          <div class="flex-1">
+            <div class="text-xs text-faint mono mb-0.5">pivot · 12s ago · <span style="color:#7DD3FC;">queued</span></div>
+            <div class="text-sm">"actually switch from mugs to hand-poured candles — same craft feel but higher margin"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLAN DIFF -->
+    <div class="card p-5">
+      <div class="flex items-center gap-3 mb-4">
+        <h3 class="text-sm font-semibold tracking-widest uppercase text-dim">Plan Diff</h3>
+        <div class="flex-1 h-px divider border-t"></div>
+        <span class="text-xs mono text-faint">v1 → v2 preview</span>
+      </div>
+
+      <div class="mono text-xs space-y-1 surface-2 rounded-md p-3">
+        <div class="flex gap-2"><span class="text-faint w-4">-</span><span style="color:#FB7185;">vertical: handmade-mugs</span></div>
+        <div class="flex gap-2"><span class="text-faint w-4">+</span><span style="color:#6EE7B7;">vertical: hand-poured-candles</span></div>
+        <div class="h-1"></div>
+        <div class="flex gap-2"><span class="text-faint w-4">·</span><span class="text-dim">agents:</span></div>
+        <div class="flex gap-2"><span class="text-faint w-4">-</span><span style="color:#FB7185;">researcher: mug pricing on Etsy</span></div>
+        <div class="flex gap-2"><span class="text-faint w-4">+</span><span style="color:#6EE7B7;">researcher: candle SKUs, scent trends, seasonality</span></div>
+        <div class="flex gap-2"><span class="text-faint w-4">~</span><span class="text-dim">verifier: <span style="color:#FBBF24;">reuse</span> craft-buyer persona study</span></div>
+        <div class="flex gap-2"><span class="text-faint w-4">+</span><span style="color:#6EE7B7;">researcher: soy wax vs. beeswax cost curves</span></div>
+        <div class="h-1"></div>
+        <div class="flex gap-2"><span class="text-faint w-4">·</span><span class="text-dim">terac_studies_planned:</span></div>
+        <div class="flex gap-2"><span class="text-faint w-4">~</span><span class="text-dim">scent-preference (candle-specific, general audience, N=20)</span></div>
+        <div class="flex gap-2"><span class="text-faint w-4">~</span><span class="text-dim">pricing (candle-specific, expert:makers, N=10)</span></div>
+      </div>
+
+      <div class="mt-4 grid grid-cols-3 gap-3 text-xs">
+        <div class="surface-2 rounded-md p-2.5">
+          <div class="text-faint mono uppercase tracking-wider mb-1 text-[10px]">Kept</div>
+          <div class="tabnum text-lg" style="color:#34D399;">3</div>
+          <div class="text-faint mt-0.5">memory files carry over</div>
+        </div>
+        <div class="surface-2 rounded-md p-2.5">
+          <div class="text-faint mono uppercase tracking-wider mb-1 text-[10px]">Replaced</div>
+          <div class="tabnum text-lg" style="color:#FB7185;">2</div>
+          <div class="text-faint mt-0.5">agent tasks</div>
+        </div>
+        <div class="surface-2 rounded-md p-2.5">
+          <div class="text-faint mono uppercase tracking-wider mb-1 text-[10px]">Added</div>
+          <div class="tabnum text-lg" style="color:#7DD3FC;">2</div>
+          <div class="text-faint mt-0.5">candle-specific tasks</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEMORY CARRYOVER -->
+    <div class="card p-5">
+      <div class="flex items-center gap-3 mb-4">
+        <h3 class="text-sm font-semibold tracking-widest uppercase text-dim">Memory carryover</h3>
+        <div class="flex-1 h-px divider border-t"></div>
+      </div>
+      <div class="space-y-2 text-sm">
+        <div class="flex items-center gap-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+          <span class="mono text-sm text-dim">memory/shared/craft-market.md</span>
+          <span class="text-xs text-faint ml-auto">7 KB · relevant</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+          <span class="mono text-sm text-dim">memory/shared/pricing-methodology.md</span>
+          <span class="text-xs text-faint ml-auto">2 KB · relevant</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+          <span class="mono text-sm text-dim">memory/researcher/etsy-scraper.md</span>
+          <span class="text-xs text-faint ml-auto">4 KB · relevant</span>
+        </div>
+        <div class="flex items-center gap-3 pt-2 border-t divider mt-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M4 4h6l2 2h8a2 2 0 012 2v9a3 3 0 01-3 3H4a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+          <span class="mono text-sm text-dim">memory/researcher/mug-signals.md</span>
+          <span class="text-xs text-faint ml-auto">archived · superseded</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -33,46 +33,63 @@ Every PRD in this folder has the same sections in the same order:
 9. **If stuck** — escalation path
 10. **Standalone demo** — how to run just this package against fixtures
 
-## Assignments
+## The five tracks
 
-| PRD | Agent | Owns |
-|---|---|---|
-| [`agent-a-ui.md`](./agent-a-ui.md) | A — UI | `packages/ui/` |
-| [`agent-b-orchestrator.md`](./agent-b-orchestrator.md) | B — Orchestrator | `packages/orchestrator/` |
-| [`agent-c1-researcher.md`](./agent-c1-researcher.md) | C1 — Researcher | `packages/agents/researcher/` |
-| [`agent-c2-builder.md`](./agent-c2-builder.md) | C2 — Builder | `packages/agents/builder/` |
-| [`agent-c3-verifier.md`](./agent-c3-verifier.md) | C3 — Verifier ⭐ | `packages/agents/verifier/` |
-| [`agent-d-integrations.md`](./agent-d-integrations.md) | D — Integrations | `packages/integrations/` |
+Work is split into five parallel tracks. Each track is a directory owner; multiple PRDs may live under the same track (e.g. all reactive agents share Track 3's context contract).
 
-## Golden rules — every agent
+| Track | Theme | PRDs | Package(s) |
+|-------|-------|------|------------|
+| **1** | UI | [`agent-a-ui.md`](./agent-a-ui.md) | `packages/ui/` |
+| **2** | Orchestrator + DB | [`agent-b-orchestrator.md`](./agent-b-orchestrator.md) | `packages/orchestrator/` |
+| **3** | Reactive agents | [`agent-c0-planner.md`](./agent-c0-planner.md), [`agent-c1-researcher.md`](./agent-c1-researcher.md), [`agent-c2-builder.md`](./agent-c2-builder.md), [`agent-c3-verifier.md`](./agent-c3-verifier.md), [`agent-c4-replay-qa.md`](./agent-c4-replay-qa.md) | `packages/agents/{planner,researcher,builder,verifier,replay-qa}/` |
+| **4** | Cron agents | [`agent-d1-revenue-watcher.md`](./agent-d1-revenue-watcher.md), [`agent-d2-service-watcher.md`](./agent-d2-service-watcher.md) | `packages/agents/{revenue-watcher,service-watcher}/` |
+| **5** | Integrations | [`agent-e-integrations.md`](./agent-e-integrations.md) | `packages/integrations/` |
 
-1. Only write files inside your `Owns` directory. Zero exceptions.
-2. Do not modify `packages/shared/`. If you need a schema change, stop and escalate.
-3. Emit trace events for every meaningful action. Judges are reading them live.
-4. Your package must run standalone via `npm run demo` against fixtures.
-5. Commit after every completed task step. Small commits, clear messages.
-6. If ambiguous, ship the smallest thing that satisfies the checkbox and move on.
+## Golden rules — every dev agent
+
+1. **Only write files inside your `Owns` directory. Zero exceptions.**
+2. Do not modify `packages/shared/`. If you need a schema change, stop and escalate per [CONTRACTS.md §9](../CONTRACTS.md).
+3. **All communication with the orchestrator is HTTP** (`POST /internal/turns/:turn_id/events`). No stdout JSONL. No file drops.
+4. Emit trace events for every meaningful action. Judges are reading them live.
+5. Your package must run standalone via `npm run demo` against fixtures.
+6. Commit after every completed task step. Small commits, clear messages.
+7. If ambiguous, ship the smallest thing that satisfies the checkbox and move on.
 
 ## Timeline
 
 - **Hour 0.0 – 0.75** — Phase 0 (contracts, fixtures, PRDs) done. No dev agents running yet.
-- **Hour 0.75 – 5.75** — All six agents work in parallel. No cross-talk needed.
+- **Hour 0.75 – 5.75** — All tracks work in parallel. No cross-talk needed.
 - **Hour 5.75 – 6.75** — Integration. See [`../INTEGRATION.md`](../INTEGRATION.md).
 - **Hour 6.75 – 7.75** — Demo prep + rehearsal. See [`../DEMO.md`](../DEMO.md).
 
+## Dependency order (only for integration; dev can run in parallel)
+
+```
+Phase 0: shared/ + fixtures/  (must be done before any track starts)
+    │
+    ├── Track 1 (UI)              ── fixtures/traces/*.jsonl → SSE mock
+    ├── Track 2 (Orch)            ── stub agents from fixtures/agents/stubs/
+    ├── Track 3 (Reactive)        ── AgentContext from fixtures/contexts/*.json
+    ├── Track 4 (Cron)            ── same context contract as Track 3
+    └── Track 5 (Integrations)    ── FIXTURE_MODE=true returns canned data
+```
+
+Phase 2 wires them together — see [`../INTEGRATION.md`](../INTEGRATION.md).
+
 ## How to launch a dev agent
 
-### Via Claude Code (worktree pattern)
+### Via Claude Code (worktree pattern) — recommended
 
 ```bash
 # From repo root
 git worktree add ../autobiz-ui feature/ui
 cd ../autobiz-ui
 # Open Claude Code here. Give it:
-"Read agents/agent-a-ui.md. Work through the Tasks checklist in order. Commit after each. Stop if blocked."
+#   "Read agents/agent-a-ui.md. Work through the Tasks checklist in order.
+#    Commit after each. Stop if blocked."
 ```
 
-Repeat for each agent in its own worktree. They cannot touch each other's files.
+Repeat for each PRD in its own worktree. They cannot touch each other's files.
 
 ### Via multiple humans
 
