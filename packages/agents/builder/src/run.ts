@@ -1,4 +1,5 @@
-import { AgentContextSchema, type TraceEventInput } from "@autobiz/shared";
+import { AgentContextSchema, type AgentContext } from "@autobiz/shared";
+import { OrchClient } from "./orch.js";
 
 const AGENT = "builder" as const;
 
@@ -8,40 +9,33 @@ async function readStdin(): Promise<string> {
   return Buffer.concat(chunks).toString("utf8");
 }
 
-async function postEvent(orchUrl: string, turnId: string, event: TraceEventInput) {
-  const res = await fetch(`${orchUrl}/internal/turns/${turnId}/events`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(event),
-  });
-  if (!res.ok) throw new Error(`POST event failed: ${res.status}`);
+function detectVersion(ctx: AgentContext): { version: number; isRetry: boolean } {
+  const bugs = ctx.prior_bugs ?? [];
+  return { version: bugs.length > 0 ? 2 : 1, isRetry: bugs.length > 0 };
 }
 
 async function main() {
   const raw = await readStdin();
   const ctx = AgentContextSchema.parse(JSON.parse(raw));
-  const orchUrl = ctx.env.orchestrator_url;
-  const nowIso = () => new Date().toISOString();
-
-  const base = {
+  const orch = new OrchClient(ctx.env.orchestrator_url, ctx.turn_id, {
     project_id: ctx.project_id,
     turn: ctx.turn,
     agent: AGENT,
     agent_run_id: ctx.agent_run_id,
-  } as const;
-
-  await postEvent(orchUrl, ctx.turn_id, {
-    ...base,
-    type: "thought",
-    content: `[stub] ${AGENT} received context for project ${ctx.project_id}`,
-    ts: nowIso(),
   });
 
-  await postEvent(orchUrl, ctx.turn_id, {
-    ...base,
+  const { version, isRetry } = detectVersion(ctx);
+
+  await orch.event({
+    type: "thought",
+    content: isRetry
+      ? `builder v${version}: retry run with ${ctx.prior_bugs!.length} prior bug(s)`
+      : `builder v${version}: fresh build for ${ctx.plan.vertical} project`,
+  });
+
+  await orch.event({
     type: "result",
-    content: `[stub] ${AGENT} finished. Real implementation lives in this worktree's PRD.`,
-    ts: nowIso(),
+    content: `builder v${version} finished (stub)`,
   });
 }
 
