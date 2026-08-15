@@ -53,3 +53,5 @@ packages/*/memory/
 packages/agents/*/state/
 packages/agents/*/memory/
 autobiz.db
+autobiz.db-shm
+autobiz.db-wal
