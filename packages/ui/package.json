@@ -7,7 +7,7 @@
     "start": "next start -p 3000",
     "dev": "next dev -p 3000",
     "demo": "next dev -p 3000",
-    "test:contracts": "vitest run --dir ../../tests/contracts ui.contract.test.ts"
+    "test:contracts": "vitest run --root ../.. tests/contracts/ui.contract.test.ts"
   },
   "dependencies": {
     "@autobiz/shared": "workspace:*",

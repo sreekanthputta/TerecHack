@@ -10,7 +10,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/run.js",
     "demo": "FIXTURE_MODE=true TURN_ID=demo INT_URL=http://localhost:4100 ORCH_URL=http://localhost:4000 node dist/run.js < ../../../fixtures/contexts/service-watcher.json",
-    "test:contracts": "vitest run --dir ../../../tests/contracts service-watcher.contract.test.ts"
+    "test:contracts": "vitest run --root ../../.. tests/contracts/service-watcher.contract.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.28.0",

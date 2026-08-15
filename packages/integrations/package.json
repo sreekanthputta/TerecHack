@@ -9,7 +9,7 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "demo": "PORT=4100 FIXTURE_MODE=true tsx src/server.ts",
-    "test:contracts": "vitest run --dir ../../tests/contracts integrations.contract.test.ts"
+    "test:contracts": "vitest run --root ../.. tests/contracts/integrations.contract.test.ts"
   },
   "dependencies": {
     "@autobiz/shared": "workspace:*",
