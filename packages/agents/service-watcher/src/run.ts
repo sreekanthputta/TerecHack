@@ -1,4 +1,6 @@
 import { AgentContextSchema, type TraceEventInput } from "@autobiz/shared";
+import { OrchClient } from "./http.js";
+import { loadState, pruneSynthHashes, recentTicks, saveState } from "./state.js";
 
 const AGENT = "service-watcher" as const;
 
@@ -8,19 +10,10 @@ async function readStdin(): Promise<string> {
   return Buffer.concat(chunks).toString("utf8");
 }
 
-async function postEvent(orchUrl: string, turnId: string, event: TraceEventInput) {
-  const res = await fetch(`${orchUrl}/internal/turns/${turnId}/events`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(event),
-  });
-  if (!res.ok) throw new Error(`POST event failed: ${res.status}`);
-}
-
 async function main() {
   const raw = await readStdin();
   const ctx = AgentContextSchema.parse(JSON.parse(raw));
-  const orchUrl = ctx.env.orchestrator_url;
+  const orch = new OrchClient(ctx.env.orchestrator_url, ctx.turn_id);
   const nowIso = () => new Date().toISOString();
 
   const base = {
@@ -30,22 +23,30 @@ async function main() {
     agent_run_id: ctx.agent_run_id,
   } as const;
 
-  await postEvent(orchUrl, ctx.turn_id, {
-    ...base,
+  const emit = (partial: Omit<TraceEventInput, keyof typeof base>) =>
+    orch.postEvent({ ...base, ...partial });
+
+  let state = loadState(ctx.project_id);
+  state = pruneSynthHashes(state, Date.now());
+
+  await emit({
     type: "thought",
-    content: `[stub] ${AGENT} received context for project ${ctx.project_id}`,
+    content: `service-watcher tick t=${ctx.turn} project=${ctx.project_id} history=${recentTicks(state).length}`,
     ts: nowIso(),
   });
 
-  await postEvent(orchUrl, ctx.turn_id, {
-    ...base,
+  saveState(state);
+
+  await emit({
     type: "result",
-    content: `[stub] ${AGENT} finished. Real implementation lives in this worktree's PRD.`,
+    content: `service-watcher tick t=${ctx.turn} complete`,
     ts: nowIso(),
   });
 }
 
 main().catch((err) => {
   console.error(err);
-  process.exit(1);
+  // Fail-soft: never crash cron. Non-zero exit only if we cannot serialize even
+  // an error trace.
+  process.exit(0);
 });
