@@ -14,6 +14,7 @@ type MemoryFile = {
   size: number;
   updated_at: string;
   agent?: string;
+  content?: string;
 };
 
 async function jsonFetch<T>(input: string, init?: RequestInit): Promise<T> {

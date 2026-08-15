@@ -644,3 +644,144 @@ input[type="password"] {
   );
   border-color: rgba(139, 92, 246, 0.25);
 }
+
+.pill-agent {
+  background: rgba(139, 92, 246, 0.10);
+  color: #DDD6FE;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+.pill-updated {
+  background: rgba(16, 185, 129, 0.10);
+  color: #6EE7B7;
+  border: 1px solid rgba(16, 185, 129, 0.22);
+}
+
+.pill-archived {
+  background: rgba(107, 107, 114, 0.15);
+  color: #9A9AA1;
+  border: 1px solid rgba(107, 107, 114, 0.30);
+}
+
+.file-item {
+  transition: background 120ms;
+  cursor: pointer;
+}
+
+.file-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.file-item.active {
+  background: rgba(139, 92, 246, 0.06);
+  border-left: 2px solid var(--violet);
+  padding-left: 14px;
+}
+
+.md-content {
+  line-height: 1.6;
+}
+
+.md-content h1 {
+  font-family: var(--font-instrument), "Instrument Serif", serif;
+  font-size: 32px;
+  letter-spacing: -0.01em;
+  margin: 24px 0 12px;
+}
+
+.md-content h2 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 24px 0 10px;
+}
+
+.md-content h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 20px 0 8px;
+}
+
+.md-content p {
+  color: var(--text);
+  margin: 0 0 12px;
+}
+
+.md-content code {
+  font-family: var(--font-jetbrains), "JetBrains Mono", monospace;
+  background: var(--surface-2);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.md-content pre {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+  margin: 0 0 16px;
+}
+
+.md-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.md-content ul {
+  margin: 0 0 12px;
+  padding-left: 20px;
+}
+
+.md-content li {
+  color: var(--text-dim);
+  margin: 4px 0;
+}
+
+.md-content li strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.md-content blockquote {
+  border-left: 2px solid var(--violet);
+  padding-left: 12px;
+  color: var(--text-dim);
+  margin: 12px 0;
+  font-style: italic;
+}
+
+.md-content a {
+  color: #C4B5FD;
+  text-decoration: none;
+}
+
+.md-content a:hover {
+  text-decoration: underline;
+}
+
+.yaml-block {
+  background: rgba(139, 92, 246, 0.04);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: var(--font-jetbrains), "JetBrains Mono", monospace;
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+
+.yaml-block .k {
+  color: #C4B5FD;
+}
+
+.yaml-block .v {
+  color: var(--text);
+}
+
+.yaml-block .c {
+  color: var(--text-faint);
+}
