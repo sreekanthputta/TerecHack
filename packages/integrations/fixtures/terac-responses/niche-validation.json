@@ -1,0 +1,35 @@
+{
+  "topic": "niche-validation",
+  "responses": [
+    {
+      "answer": "cable-organizers",
+      "reasoning": "Boring but sells forever. Every desk owner needs one.",
+      "respondent_id": "r_301"
+    },
+    {
+      "answer": "cable-organizers",
+      "reasoning": "Low competition on Etsy for the modular ones.",
+      "respondent_id": "r_302"
+    },
+    {
+      "answer": "planter-pots",
+      "reasoning": "Instagrammable but oversaturated.",
+      "respondent_id": "r_303"
+    },
+    {
+      "answer": "cable-organizers",
+      "reasoning": "Print time is short, margins are decent.",
+      "respondent_id": "r_304"
+    },
+    {
+      "answer": "keycaps",
+      "reasoning": "Community will pay $8-15 each.",
+      "respondent_id": "r_305"
+    },
+    {
+      "answer": "cable-organizers",
+      "reasoning": "Bundle 3 as a set and it justifies $25.",
+      "respondent_id": "r_306"
+    }
+  ]
+}

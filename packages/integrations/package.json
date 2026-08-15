@@ -8,16 +8,19 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-    "demo": "PORT=4100 FIXTURE_MODE=true tsx src/server.ts",
+    "demo": "FIXTURE_MODE=true INTEGRATIONS_PORT=4123 LOG_LEVEL=silent tsx src/demo.ts",
+    "server": "tsx src/server.ts",
     "test:contracts": "vitest run --root ../.. tests/contracts/integrations.contract.test.ts"
   },
   "dependencies": {
     "@autobiz/shared": "workspace:*",
     "@fastify/cors": "^10.0.1",
+    "dotenv": "^17.4.2",
     "fastify": "^5.0.0",
     "pino": "^9.4.0",
     "pino-pretty": "^11.2.2",
-    "stripe": "^17.1.0"
+    "stripe": "^17.1.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

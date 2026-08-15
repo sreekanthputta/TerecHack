@@ -1,44 +1,69 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import { env, assertBootSafety } from "./env.js";
+import { logger } from "./logger.js";
+import { registerTeracRoutes } from "./routes/terac.js";
+import { registerStripeRoutes } from "./routes/stripe.js";
+import { registerRenderRoutes } from "./routes/render.js";
+import { registerLinqRoutes } from "./routes/linq.js";
+import { registerSuperserveRoutes } from "./routes/superserve.js";
+import { registerReplayRoutes } from "./routes/replay.js";
+import { registerShopifyRoutes } from "./routes/shopify.js";
+import { startBackgroundCache } from "./cache.js";
+import { warmPool } from "./clients/superserve.js";
 
-const stripeKey = process.env.STRIPE_RESTRICTED_KEY ?? "";
-if (stripeKey.startsWith("sk_")) {
-  console.error(
-    "Integrations refuses to boot: STRIPE_RESTRICTED_KEY starts with 'sk_'. Use a restricted rk_ key.",
+export async function buildApp() {
+  assertBootSafety();
+
+  const app = Fastify({ loggerInstance: logger });
+
+  const allowed = new Set(
+    [env.NEXT_PUBLIC_APP_URL, env.ORCH_URL].filter((v) => v.length > 0),
   );
-  process.exit(1);
+
+  await app.register(cors, {
+    origin: (origin, cb) => {
+      // Non-browser callers (curl, Node fetch, tests) omit Origin — always allow.
+      if (!origin) return cb(null, true);
+      if (allowed.has(origin)) return cb(null, true);
+      cb(new Error(`CORS: origin not allowed: ${origin}`), false);
+    },
+    credentials: true,
+  });
+
+  app.get("/health", async () => ({
+    ok: true,
+    service: "integrations",
+    fixture_mode: env.FIXTURE_MODE,
+    ts: new Date().toISOString(),
+  }));
+
+  await app.register(registerTeracRoutes);
+  await app.register(registerStripeRoutes);
+  await app.register(registerRenderRoutes);
+  await app.register(registerLinqRoutes);
+  await app.register(registerSuperserveRoutes);
+  await app.register(registerReplayRoutes);
+  await app.register(registerShopifyRoutes);
+
+  return app;
 }
 
-const app = Fastify({ logger: { transport: { target: "pino-pretty" } } });
+async function main() {
+  const app = await buildApp();
+  await app.listen({ port: env.INTEGRATIONS_PORT, host: "0.0.0.0" });
+  app.log.info(
+    { port: env.INTEGRATIONS_PORT, fixture_mode: env.FIXTURE_MODE },
+    "integrations listening",
+  );
+  startBackgroundCache();
+  void warmPool();
+}
 
-await app.register(cors, {
-  origin: (origin, cb) => cb(null, true),
-});
-
-app.get("/health", async () => ({
-  ok: true,
-  service: "integrations",
-  fixture_mode: process.env.FIXTURE_MODE === "true",
-  ts: new Date().toISOString(),
-}));
-
-// Stub endpoints — full implementation lives in the agent-e-integrations worktree.
-app.post("/terac/ask", async () => ({ ask_id: "fixture-stub" }));
-app.get("/terac/result/:ask_id", async (_req, reply) => reply.code(202).send({ pending: true }));
-app.post("/stripe/payment-link", async () => ({ url: "https://buy.stripe.com/test_stub", id: "pl_stub" }));
-app.get("/stripe/charges/:project_id", async () => ({ charges: [], balance_usd: 0, count: 0 }));
-app.post("/render/deploy", async () => ({ url: "https://stub.onrender.com", deploy_id: "dep_stub" }));
-app.get("/render/health/:project_id", async () => ({ status: "healthy", latency_ms: 42, checked_at: new Date().toISOString() }));
-app.get("/render/logs/:project_id", async () => ({ lines: [] }));
-app.post("/linq/notify", async () => ({ sid: "lq_stub" }));
-app.post("/superserve/session", async () => ({ session_id: "ss_stub", browser_ws_url: "ws://stub" }));
-app.delete("/superserve/session/:id", async () => ({ ok: true }));
-app.post("/replay/project", async () => ({ id: "lqa_stub", url: "https://qa.replay.io/projects/stub", exploration_id: "expl_stub" }));
-app.get("/replay/project/:id/status", async () => ({ state: "done", journeys_passed_count: 0, journeys_total: 0, updated_at: new Date().toISOString() }));
-app.get("/replay/project/:id/bugs", async () => ({ bugs: [] }));
-app.get("/replay/bugs/:bug_id", async () => ({ id: "b_stub", severity: "minor", title: "stub", observed: "-", expected: "-", repro: [], evidence_url: "-", route: "-" }));
-app.post("/replay/project/:id/explorations", async () => ({ exploration_id: "expl_stub_2" }));
-
-const port = Number(process.env.INTEGRATIONS_PORT ?? process.env.PORT ?? 4100);
-await app.listen({ port, host: "0.0.0.0" });
-app.log.info(`integrations stub listening on :${port}`);
+const isEntry = import.meta.url === `file://${process.argv[1]}`;
+if (isEntry) {
+  main().catch((err) => {
+    logger.error({ err }, "integrations failed to boot");
+    process.exit(1);
+  });
+}

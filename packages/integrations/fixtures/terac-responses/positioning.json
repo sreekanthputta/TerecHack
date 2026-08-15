@@ -1,0 +1,30 @@
+{
+  "topic": "positioning",
+  "responses": [
+    {
+      "answer": "Everyday carry",
+      "reasoning": "Lead with utility — 'the one you actually use'.",
+      "respondent_id": "r_201"
+    },
+    {
+      "answer": "Gift-friendly",
+      "reasoning": "Under $30 + presentable packaging reads as gift.",
+      "respondent_id": "r_202"
+    },
+    {
+      "answer": "Everyday carry",
+      "reasoning": "The photos suggest daily use.",
+      "respondent_id": "r_203"
+    },
+    {
+      "answer": "Maker-community",
+      "reasoning": "Highlight that it is 3D printed locally.",
+      "respondent_id": "r_204"
+    },
+    {
+      "answer": "Everyday carry",
+      "reasoning": "Compact, useful — that is the story.",
+      "respondent_id": "r_205"
+    }
+  ]
+}
