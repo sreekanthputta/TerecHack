@@ -3,6 +3,7 @@ import { IntClient, OrchClient } from "./http.js";
 import { fixtureHealth, fixtureLogs } from "./fixtures.js";
 import { toTick, type HealthReading } from "./health.js";
 import { scan, totalErrors, type LogCluster } from "./logs.js";
+import { renderUptimeMd } from "./memory.js";
 import {
   appendTick,
   errorsLast5m,
@@ -116,6 +117,47 @@ async function main() {
         count: c.count,
         example_line: c.example,
       },
+    });
+  }
+
+  try {
+    await orch.postState({
+      uptime_pct: uptime,
+      p95_latency_ms: p95Latency,
+      errors_last_5m: errors5m,
+      updated_at: nowIso(),
+    });
+  } catch (err) {
+    await emit({
+      type: "error",
+      content: `state patch failed: ${(err as Error).message}`,
+      ts: nowIso(),
+    });
+  }
+
+  try {
+    const md = renderUptimeMd({
+      projectId: ctx.project_id,
+      ticks: state.ticks,
+      incidents: clusters.map((c) => ({
+        ts: reading.checked_at,
+        summary: `${c.kind} on ${c.endpoint} x${c.count}`,
+      })),
+      uptimePct: uptime,
+      p95: p95Latency,
+      errors5m,
+    });
+    await orch.postMemory({
+      scope: "project",
+      path: "ops/uptime.md",
+      content: md,
+      mode: "upsert",
+    });
+  } catch (err) {
+    await emit({
+      type: "error",
+      content: `memory upsert failed: ${(err as Error).message}`,
+      ts: nowIso(),
     });
   }
 
