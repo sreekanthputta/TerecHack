@@ -1,6 +1,7 @@
 import { AgentContextSchema, type AgentContext } from "@autobiz/shared";
 import { OrchClient } from "./orch.js";
 import { pickTemplate } from "./template.js";
+import { generateCopy } from "./content.js";
 
 const AGENT = "builder" as const;
 
@@ -39,6 +40,17 @@ async function main() {
     type: "action",
     content: `chose template "${template.id}" (${template.reason})`,
     metadata: { template: template.id, sku_count: template.sku_count },
+  });
+
+  const copy = await generateCopy({
+    plan: ctx.plan,
+    template: template.id,
+    sku_count: template.sku_count,
+    fixture_mode: ctx.env.fixture_mode,
+  });
+  await orch.event({
+    type: "thought",
+    content: `generated copy: "${copy.hero}" (${copy.products.length} products)`,
   });
 
   await orch.event({
