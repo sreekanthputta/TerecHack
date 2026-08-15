@@ -785,3 +785,211 @@ input[type="password"] {
 .yaml-block .c {
   color: var(--text-faint);
 }
+
+.pill-required {
+  background: rgba(244, 63, 94, 0.10);
+  color: #FB7185;
+  border: 1px solid rgba(244, 63, 94, 0.24);
+}
+
+.pill-soon {
+  background: rgba(107, 107, 114, 0.10);
+  color: #6B6B72;
+  border: 1px solid rgba(107, 107, 114, 0.20);
+}
+
+.pill-cat-sm {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  font-size: 10px;
+  padding: 2px 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+  transition: background 120ms, color 120ms;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.nav-item:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.nav-item.active {
+  color: var(--text);
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.20);
+}
+
+.integration {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  transition: border-color 120ms;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.integration:hover {
+  border-color: var(--border-strong);
+}
+
+.integration.connected {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.03), var(--surface) 40%);
+}
+
+.integration.required {
+  background: linear-gradient(180deg, rgba(244, 63, 94, 0.04), var(--surface) 40%);
+  border-color: rgba(244, 63, 94, 0.20);
+}
+
+.logo-tile {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-jetbrains), "JetBrains Mono", monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+.masked-key {
+  font-family: var(--font-jetbrains), "JetBrains Mono", monospace;
+  font-size: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.masked-key .dots {
+  letter-spacing: 1px;
+  color: var(--text-faint);
+}
+
+.btn-connect {
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 12px;
+  transition: background 120ms;
+}
+
+.btn-connect:hover {
+  background: var(--surface-3);
+}
+
+.field-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 500;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.field-hint {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 6px;
+  font-family: var(--font-jetbrains), "JetBrains Mono", monospace;
+}
+
+.use-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-jetbrains), "JetBrains Mono", monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-faint);
+  border: 1px solid var(--border);
+}
+
+.settings-input {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  width: 100%;
+  font-family: var(--font-jetbrains), "JetBrains Mono", monospace;
+  transition: border-color 120ms, background 120ms;
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: rgba(139, 92, 246, 0.5);
+  background: var(--surface-3);
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 40;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 32px);
+  max-width: 520px;
+  z-index: 50;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.modal {
+  animation: modalIn 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
