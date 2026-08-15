@@ -1,0 +1,22 @@
+{
+  "ask_id": "fixture-niche-validation",
+  "project_id": "fixture",
+  "received_at": "2025-08-15T18:00:00.000Z",
+  "responses": [
+    { "answer": "custom d20 dice trays", "reasoning": "TTRPG group would preorder", "respondent_id": "maker-01" },
+    { "answer": "custom d20 dice trays", "reasoning": "easy Etsy niche, high margin", "respondent_id": "maker-02" },
+    { "answer": "custom d20 dice trays", "reasoning": "I sell 4-6/week on Etsy at $18", "respondent_id": "maker-03" },
+    { "answer": "custom d20 dice trays", "reasoning": "cheap filament, quick print, wide audience", "respondent_id": "maker-04" },
+    { "answer": "cable management", "reasoning": "boring but reliable demand", "respondent_id": "maker-05" },
+    { "answer": "custom d20 dice trays", "reasoning": "TTRPG demand is climbing", "respondent_id": "maker-06" },
+    { "answer": "custom d20 dice trays", "reasoning": "personalized names sell above cost", "respondent_id": "maker-07" },
+    { "answer": "cosplay props", "reasoning": "seasonal Halloween spike is real", "respondent_id": "maker-08" },
+    { "answer": "custom d20 dice trays", "reasoning": "small batches feasible on one printer", "respondent_id": "maker-09" },
+    { "answer": "custom d20 dice trays", "reasoning": "commonly requested on r/DnD", "respondent_id": "maker-10" },
+    { "answer": "phone stands", "reasoning": "saturated market though", "respondent_id": "maker-11" },
+    { "answer": "custom d20 dice trays", "reasoning": "I would buy 2 for my group", "respondent_id": "maker-12" },
+    { "answer": "custom d20 dice trays", "reasoning": "TikTok maker crowd loves personalization", "respondent_id": "maker-13" },
+    { "answer": "custom d20 dice trays", "reasoning": "AutoBusiness demo customer here — would preorder", "respondent_id": "maker-14" },
+    { "answer": "custom d20 dice trays", "reasoning": "high perceived value at $22-25", "respondent_id": "maker-15" }
+  ]
+}
