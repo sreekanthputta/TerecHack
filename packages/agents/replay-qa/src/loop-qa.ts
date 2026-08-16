@@ -45,9 +45,42 @@ export type LoopQaClient = {
   getBugDetail(bugId: string): Promise<LoopQaBugRef>;
 };
 
+// Wire shapes served by integrations, per CONTRACTS.md §326.
+type WireProject = { id: string; url: string; exploration_id: string };
+type WireStatus = {
+  state: "queued" | "running" | "done" | "failed";
+  journeys_passed_count: number;
+  journeys_total: number;
+  updated_at: string;
+};
+type WireBug = {
+  id: string;
+  severity: "blocker" | "major" | "minor";
+  title: string;
+  route: string;
+  evidence_url: string;
+  observed?: string;
+  expected?: string;
+  repro?: string[];
+};
+
+function wireBugToRef(b: WireBug): LoopQaBugRef {
+  return {
+    loop_qa_bug_id: b.id,
+    severity: b.severity,
+    route: b.route,
+    component: b.route,
+    finding_summary: b.observed ?? b.title,
+    expected_behavior: b.expected ?? "",
+    repro_steps: b.repro ?? [],
+    evidence_url: b.evidence_url,
+  };
+}
+
 /**
  * HTTP client that talks to integrations at `${baseUrl}/replay/*`. 5xx responses
- * are retried once before surfacing an error.
+ * are retried once. Translates between the CONTRACTS.md §326 wire shapes and this
+ * agent's internal Loop QA types.
  */
 export function createHttpClient(baseUrl: string, pollIntervalMs = 5000, timeoutMs = 180_000): LoopQaClient {
   async function once(method: "GET" | "POST", path: string, body?: unknown): Promise<Response> {
@@ -71,28 +104,39 @@ export function createHttpClient(baseUrl: string, pollIntervalMs = 5000, timeout
   const post = <T>(path: string, body: unknown) => req<T>("POST", path, body);
   return {
     async createProject(input) {
-      return post<LoopQaProject>(`/replay/project`, input);
+      const r = await post<WireProject>(`/replay/project`, {
+        project_id: input.name,
+        base_url: input.base_url,
+        design_document: input.design_document,
+      });
+      return { id: r.id, dashboard_url: r.url, exploration_id: r.exploration_id };
     },
     async startExploration(projectId) {
       return post<{ exploration_id: string }>(`/replay/project/${projectId}/explorations`, {});
     },
     async *pollStatus(projectId) {
       const deadline = Date.now() + timeoutMs;
-      let last: LoopQaStatus | undefined;
       while (Date.now() < deadline) {
-        const status = await get<LoopQaStatus>(`/replay/project/${projectId}/status`);
+        const s = await get<WireStatus>(`/replay/project/${projectId}/status`);
+        const status: LoopQaStatus = {
+          done: s.state === "done" || s.state === "failed",
+          journeys_covered: s.journeys_total,
+          journeys_passed_count: s.journeys_passed_count,
+          journeys_failed_count: Math.max(0, s.journeys_total - s.journeys_passed_count),
+          explored_at: s.updated_at,
+        };
         yield status;
-        last = status;
         if (status.done) return status;
         await new Promise((r) => setTimeout(r, pollIntervalMs));
       }
       throw new Error("loop-qa poll timeout");
     },
     async listBugs(projectId) {
-      return get<LoopQaBugRef[]>(`/replay/project/${projectId}/bugs`);
+      const { bugs } = await get<{ bugs: WireBug[] }>(`/replay/project/${projectId}/bugs`);
+      return bugs.map(wireBugToRef);
     },
     async getBugDetail(bugId) {
-      return get<LoopQaBugRef>(`/replay/bugs/${bugId}`);
+      return wireBugToRef(await get<WireBug>(`/replay/bugs/${bugId}`));
     },
   };
 }

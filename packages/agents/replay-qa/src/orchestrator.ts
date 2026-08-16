@@ -42,8 +42,8 @@ export class OrchestratorClient {
     return this.post(`/internal/turns/${this.turnId}/state`, patch);
   }
 
-  memory(path: string, body: string): Promise<void> {
-    return this.post(`/internal/turns/${this.turnId}/memory`, { path, body });
+  memory(path: string, content: string): Promise<void> {
+    return this.post(`/internal/turns/${this.turnId}/memory`, { path, content });
   }
 
   private async post(pathname: string, body: unknown): Promise<void> {

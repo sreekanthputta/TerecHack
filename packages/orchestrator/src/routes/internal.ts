@@ -116,6 +116,11 @@ export async function registerInternalRoutes(app: FastifyInstance, ctx: Ctx): Pr
       reply.code(403);
       return { error: "project_mismatch" };
     }
+    // A QA run against builder vN is the source of truth for that build: any
+    // still-open bug from an earlier version that this run did not re-report is
+    // fixed. Close them first, then insert this run's findings (INSERT OR
+    // REPLACE re-opens any bug still present in the new report).
+    ctx.repo.markBugsFixed(turn.project_id, parsed.data.builder_version);
     ctx.repo.insertBugs(turn.project_id, parsed.data.builder_version, parsed.data.bugs, parsed.data.ts);
     const open = ctx.repo.countOpenBugs(turn.project_id);
     ctx.repo.setBugsOpen(turn.project_id, open);
