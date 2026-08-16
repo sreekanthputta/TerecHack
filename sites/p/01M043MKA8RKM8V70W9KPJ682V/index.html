@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Filament &amp; Folklore — Your idle 3D printer just became a story-worth-selling.</title><style>
+  :root {
+    --bg: #0b1020;
+    --panel: #0f162e;
+    --card: #ffffff;
+    --fg: #0b1020;
+    --muted: #5b6478;
+    --line: #e6e8ef;
+    --brand: #4f46e5;
+    --brand-2: #06b6d4;
+    --accent: #10b981;
+    --radius: 16px;
+    --shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+    --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.22);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--fg);
+    background: #f7f8fc;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  .section { padding: 72px 0; }
+
+  /* Nav */
+  nav {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: saturate(180%) blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .brand { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 10px; }
+  .brand .dot { width: 12px; height: 12px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand-2)); box-shadow: 0 0 0 4px rgba(79,70,229,0.12); }
+  .nav-links { display: flex; align-items: center; gap: 22px; font-size: 15px; color: var(--muted); }
+  .nav-links a:hover { color: var(--fg); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 13px 24px; border-radius: 999px; font-weight: 700; font-size: 15px;
+    border: 1px solid transparent; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+  .btn-primary { background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff; box-shadow: 0 8px 20px rgba(79,70,229,0.35); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(79,70,229,0.45); }
+  .btn-ghost { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.28); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.16); }
+  .btn-dark { background: var(--fg); color: #fff; }
+  .btn-dark:hover { transform: translateY(-1px); }
+  .btn-block { width: 100%; justify-content: center; }
+
+  /* Hero */
+  .hero { position: relative; overflow: hidden; color: #fff; background: radial-gradient(1200px 500px at 80% -10%, rgba(6,182,212,0.35), transparent 60%), linear-gradient(160deg, #0b1020 0%, #17204a 55%, #221a4d 100%); }
+  .hero .wrap { padding-top: 84px; padding-bottom: 96px; text-align: center; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); font-size: 13px; font-weight: 600; letter-spacing: .02em; margin-bottom: 22px; }
+  .badge .live { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(16,185,129,0.25); }
+  .hero h1 { font-size: clamp(34px, 6vw, 60px); font-weight: 850; letter-spacing: -0.03em; line-height: 1.05; margin: 0 auto 18px; max-width: 15ch; background: linear-gradient(180deg,#fff, #cdd3ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p.sub { font-size: clamp(16px, 2.4vw, 21px); color: #c7cce0; max-width: 60ch; margin: 0 auto 32px; }
+  .hero .actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .trust-row { margin-top: 40px; display: flex; gap: 26px; justify-content: center; flex-wrap: wrap; color: #aab0cc; font-size: 14px; }
+  .trust-row span { display: inline-flex; align-items: center; gap: 8px; }
+
+  /* Section headings */
+  .eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: 13px; font-weight: 700; color: var(--brand); text-align: center; }
+  .section h2 { font-size: clamp(26px, 4vw, 38px); font-weight: 820; letter-spacing: -0.02em; text-align: center; margin: 10px auto 8px; max-width: 20ch; }
+  .section .lede { text-align: center; color: var(--muted); max-width: 60ch; margin: 0 auto 44px; font-size: 17px; }
+
+  /* Value props */
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+  .feature { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow); transition: transform .15s ease, box-shadow .15s ease; }
+  .feature:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+  .feature .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 20px; background: linear-gradient(135deg, rgba(79,70,229,0.12), rgba(6,182,212,0.12)); color: var(--brand); margin-bottom: 14px; }
+  .feature p { color: var(--fg); font-weight: 600; }
+
+  /* Products */
+  .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 26px; }
+  .product { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform .15s ease, box-shadow .15s ease; display: flex; flex-direction: column; }
+  .product:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+  .product img { width: 100%; height: 200px; object-fit: cover; display: block; background: #eef0f7; }
+  .product .body { padding: 22px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .product .body h3 { font-size: 19px; font-weight: 780; letter-spacing: -0.01em; }
+  .product .body .blurb { color: var(--muted); font-size: 15px; flex: 1; }
+  .price { font-size: 26px; font-weight: 850; letter-spacing: -0.02em; }
+  .price small { font-size: 14px; font-weight: 600; color: var(--muted); }
+
+  /* Pricing card (single product) */
+  .pricing { max-width: 460px; margin: 0 auto; }
+  .pricing .card { background: var(--card); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow-lg); overflow: hidden; }
+  .pricing .card-head { padding: 30px 30px 0; }
+  .pricing .plan-name { font-weight: 800; font-size: 20px; }
+  .pricing .amount { font-size: 52px; font-weight: 860; letter-spacing: -0.03em; margin: 10px 0 4px; }
+  .pricing .amount small { font-size: 17px; font-weight: 600; color: var(--muted); }
+  .pricing ul { list-style: none; padding: 22px 30px; display: grid; gap: 12px; }
+  .pricing li { display: flex; gap: 12px; align-items: flex-start; color: var(--fg); font-size: 15px; }
+  .pricing li .chk { color: var(--accent); font-weight: 800; }
+  .pricing .card-foot { padding: 0 30px 30px; }
+  .pricing .total { text-align: center; color: var(--muted); font-size: 14px; margin-top: 14px; }
+
+  /* Footer */
+  footer { border-top: 1px solid var(--line); padding: 40px 0; color: var(--muted); font-size: 14px; background: #fff; }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .alt { background: #fff; }
+
+  @media (max-width: 640px) {
+    .section { padding: 52px 0; }
+    .nav-links a:not(.btn) { display: none; }
+  }
+</style></head>
+<body>
+  
+  <nav><div class="wrap">
+    <div class="brand"><span class="dot"></span>Filament &amp; Folklore</div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#offer">Pricing</a>
+      <a class="btn btn-dark" href="https://buy.stripe.com/test_9B6dR99QD0ef13sbZEcZa09">Shop the First Run</a>
+    </div>
+  </div></nav>
+  
+  <header class="hero"><div class="wrap">
+    <span class="badge"><span class="live"></span>Live now</span>
+    <h1>Your idle 3D printer just became a story-worth-selling.</h1>
+    <p class="sub">Launch a print-on-demand shop in a weekend. Two signature pieces, one honest story, zero inventory risk—turn spare filament into steady side income.</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="https://buy.stripe.com/test_9B6dR99QD0ef13sbZEcZa09">Shop the First Run &rarr;</a>
+      <a class="btn btn-ghost" href="#features">See how it works</a>
+    </div>
+    <div class="trust-row">
+      <span>&#9889; Ships in 48h</span>
+      <span>&#128274; Secure Stripe checkout</span>
+      <span>&#11088; Loved by early customers</span>
+    </div>
+  </div></header>
+  
+  <section class="section" id="features"><div class="wrap">
+    <div class="eyebrow">Why Filament &amp; Folklore</div>
+    <h2>Everything you need, nothing you don't</h2>
+    <p class="lede">Built to get you to the good part faster.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="ic">&#10003;</div>
+        <p>Start for under $200: filament, packaging, and a shopfront included</p>
+      </div>
+      <div class="feature">
+        <div class="ic">&#10003;</div>
+        <p>Print only after the sale—no shelves, no dead stock, no waste</p>
+      </div>
+      <div class="feature">
+        <div class="ic">&#10003;</div>
+        <p>Story-first pages that turn scrollers into repeat buyers</p>
+      </div>
+      <div class="feature">
+        <div class="ic">&#10003;</div>
+        <p>Ships from your desk, backed by your maker&#x27;s guarantee</p>
+      </div>
+    </div>
+  </div></section>
+  <section class="section alt" id="offer"><div class="wrap">
+    <div class="eyebrow">The lineup</div>
+    <h2>Pick what fits you</h2>
+    <p class="lede">Every option ships fast and checks out securely.</p>
+    <div class="products">
+      <div class="product">
+        <img src="https://picsum.photos/seed/filament-folklore-01m043mka8rkm8v70w9kpj-0/800/600" alt="Desk Nebula Lamp" loading="lazy" />
+        <div class="body">
+          <h3>Desk Nebula Lamp</h3>
+          <p class="blurb">A swirled, translucent LED lamp that glows like a pocket galaxy—printed to order in your chosen colorway.</p>
+          <div class="price" data-testid="total-0">$42</div>
+          <a class="btn btn-dark btn-block" href="https://buy.stripe.com/test_9B6dR99QD0ef13sbZEcZa09">Shop the First Run</a>
+        </div>
+      </div>
+      <div class="product">
+        <img src="https://picsum.photos/seed/filament-folklore-01m043mka8rkm8v70w9kpj-1/800/600" alt="Modular Cable Kraken" loading="lazy" />
+        <div class="body">
+          <h3>Modular Cable Kraken</h3>
+          <p class="blurb">A cheeky desktop octopus that wrangles up to six cables. Tentacles flex, cables behave, desks finally breathe.</p>
+          <div class="price" data-testid="total-1">$18</div>
+          <a class="btn btn-dark btn-block" href="https://buy.stripe.com/test_9B6dR99QD0ef13sbZEcZa09">Shop the First Run</a>
+        </div>
+      </div>
+    </div>
+  </div></section>
+  
+  <footer><div class="wrap">
+    <div class="brand"><span class="dot"></span>Filament &amp; Folklore</div>
+    <div>&copy; Filament &amp; Folklore — autonomously built &amp; deployed by AutoBusiness</div>
+  </div></footer>
+</body></html>
