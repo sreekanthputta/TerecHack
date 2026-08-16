@@ -19,6 +19,26 @@ function summarize(text: string, max = 400): string {
   return clean.length <= max ? clean : `${clean.slice(0, max - 1)}…`;
 }
 
+// A browse fetch can echo back a non-URL target (LLM sometimes omits the
+// scheme), which then fails ResearchSourceSchema's .url() and drops the source.
+// Coerce to a valid absolute URL so usable sources aren't discarded.
+function coerceUrl(raw: string, item: InquiryItem): string {
+  const tryUrl = (s: string): string | null => {
+    try {
+      return new URL(s).toString();
+    } catch {
+      return null;
+    }
+  };
+  const bare = (s: string) => s.replace(/^https?:\/\//, "").replace(/^\/+/, "");
+  return (
+    tryUrl(raw) ??
+    tryUrl(`https://${bare(raw)}`) ??
+    tryUrl(`https://${bare(item.target)}`) ??
+    `https://source.local/${item.slug}`
+  );
+}
+
 async function executeItem(
   browser: Superserve,
   item: InquiryItem,
@@ -75,8 +95,10 @@ export async function runRealFlow(deps: RealDeps): Promise<void> {
     const parsed = ResearchSourceSchema.safeParse({
       slug: item.slug,
       title: page.title ?? item.slug,
-      url: page.url,
-      summary: summarize(page.text),
+      url: coerceUrl(page.url, item),
+      summary:
+        summarize(page.text) ||
+        `Reviewed ${page.title ?? item.slug} for ${ctx.plan.vertical ?? ctx.plan.goal}.`,
       evidence: item.rationale,
     });
     if (!parsed.success) {

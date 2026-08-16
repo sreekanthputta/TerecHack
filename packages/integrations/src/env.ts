@@ -29,7 +29,8 @@ export const env = {
   // Terac
   TERAC_API_KEY: process.env.TERAC_API_KEY ?? "",
   TERAC_ORG_ID: process.env.TERAC_ORG_ID ?? "",
-  TERAC_PANEL_URL: process.env.TERAC_PANEL_URL ?? "https://api.terac.dev/v1",
+  TERAC_PROJECT_ID: process.env.TERAC_PROJECT_ID ?? "",
+  TERAC_PANEL_URL: process.env.TERAC_PANEL_URL ?? "https://terac.com/api/external/v2",
   TERAC_DEFAULT_SAMPLE_SIZE: num(process.env.TERAC_DEFAULT_SAMPLE_SIZE, 15),
   TERAC_DEFAULT_TIMEOUT_SEC: num(process.env.TERAC_DEFAULT_TIMEOUT_SEC, 180),
 
@@ -43,11 +44,18 @@ export const env = {
   RENDER_API_KEY: process.env.RENDER_API_KEY ?? "",
   RENDER_OWNER_ID: process.env.RENDER_OWNER_ID ?? "",
   RENDER_REGION: process.env.RENDER_REGION ?? "oregon",
+  // Real git-backed static site: generated storefronts are pushed here and
+  // served per-project at <URL>/p/<project_id>/. Autodeploys on commit.
+  RENDER_STATIC_SITE_URL:
+    process.env.RENDER_STATIC_SITE_URL ?? "https://autobusiness-mockups.onrender.com",
+  RENDER_STATIC_PUBLISH_DIR: process.env.RENDER_STATIC_PUBLISH_DIR ?? "mockups",
+  RENDER_DEPLOY_BRANCH: process.env.RENDER_DEPLOY_BRANCH ?? "main",
 
   // Linq
   LINQ_API_KEY: process.env.LINQ_API_KEY ?? "",
   LINQ_OWNER_PHONE: process.env.LINQ_OWNER_PHONE ?? "",
   LINQ_OWNER_NAME: process.env.LINQ_OWNER_NAME ?? "",
+  LINQ_FROM_NUMBER: process.env.LINQ_FROM_NUMBER ?? "",
   LINQ_WEBHOOK_SECRET: process.env.LINQ_WEBHOOK_SECRET ?? "",
 
   // Superserve

@@ -12,7 +12,7 @@ import type {
 import { api } from "../../../../lib/api";
 import { useProjectStream } from "../../../../hooks/useProjectStream";
 import { AGENT_META, AgentLane, relativeTime } from "../../../../components/AgentLane";
-import { pseudoQr } from "../../../../lib/qr";
+import { QRCodeSVG } from "qrcode.react";
 
 function statusPill(status: ProjectStatus | undefined) {
   if (!status) return null;
@@ -373,11 +373,27 @@ export default function ProjectPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="surface-2 border divider rounded-lg p-4 flex items-center justify-center">
-                <div className="qr-grid" aria-label="QR placeholder">
-                  {pseudoQr(projectId).map((on, i) => (
-                    <span key={i} className={on ? "on" : ""} />
-                  ))}
-                </div>
+                {(() => {
+                  const qrUrl = business?.landing_url ?? business?.stripe_payment_link;
+                  return qrUrl ? (
+                    <a href={qrUrl} target="_blank" rel="noreferrer" title={qrUrl}>
+                      <QRCodeSVG
+                        value={qrUrl}
+                        size={128}
+                        bgColor="#ffffff"
+                        fgColor="#000000"
+                        level="M"
+                        includeMargin
+                      />
+                    </a>
+                  ) : (
+                    <div className="text-xs text-dim text-center">
+                      website
+                      <br />
+                      not deployed yet
+                    </div>
+                  );
+                })()}
               </div>
               <div>
                 <div className="text-xs text-faint mono uppercase tracking-wider mb-1">Scan</div>

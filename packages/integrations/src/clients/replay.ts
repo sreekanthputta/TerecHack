@@ -208,10 +208,13 @@ export async function createProject(input: CreateProjectInput): Promise<CreatePr
   const s = load();
   const existingId = s.by_autobiz_id[input.project_id];
   if (existingId) {
-    // v2+: create a new exploration on the existing project
+    // v2+: create a new exploration on the existing project. Real API wants a
+    // {prompt} body and returns {id} (no exploration_id).
     const res = await loopQaFetch(`/projects/${existingId}/explorations`, {
       method: "POST",
-      body: JSON.stringify({}),
+      body: JSON.stringify({
+        prompt: "Re-explore after code fixes; verify previously reported bugs are resolved.",
+      }),
     });
     const data = (await res.json()) as { id?: string; exploration_id?: string };
     const proj = s.projects[existingId]!;
@@ -229,7 +232,7 @@ export async function createProject(input: CreateProjectInput): Promise<CreatePr
     method: "POST",
     body: JSON.stringify({
       name: input.project_id,
-      base_url: input.base_url,
+      target_url: input.base_url,
       design_document: input.design_document,
     }),
   });
@@ -258,21 +261,54 @@ export async function createProject(input: CreateProjectInput): Promise<CreatePr
 export async function getStatus(loop_qa_id: string) {
   if (env.FIXTURE_MODE) return fixtureStatus(loop_qa_id);
   const res = await loopQaFetch(`/projects/${loop_qa_id}/status`);
+  // Real API returns a nested shape, e.g.
+  // { project:{status}, bugs:{...}, journeys:{total}, test_runs:{"in-progress":N},
+  //   explorations:{"in-progress":N} }
   const data = (await res.json()) as {
-    state: string;
-    journeys_passed_count?: number;
-    journeys_total?: number;
-    updated_at?: string;
+    project?: { status?: string };
+    bugs?: unknown;
+    journeys?: { total?: number };
+    test_runs?: Record<string, number>;
+    explorations?: Record<string, number>;
   };
-  const state = ["queued", "running", "done", "failed"].includes(data.state)
-    ? (data.state as "queued" | "running" | "done" | "failed")
-    : "running";
+  const inProgress =
+    (data.explorations?.["in-progress"] ?? 0) + (data.test_runs?.["in-progress"] ?? 0);
+  const rawState = data.project?.status?.toLowerCase() ?? "";
+  const state: "queued" | "running" | "done" | "failed" =
+    rawState === "failed"
+      ? "failed"
+      : inProgress > 0
+        ? "running"
+        : ["done", "complete", "completed", "ready"].includes(rawState)
+          ? "done"
+          : rawState === "queued"
+            ? "queued"
+            : "done";
+  const journeys_total = data.journeys?.total ?? 0;
+  const openBugs = countBugs(data.bugs);
+  const journeys_passed_count = Math.max(0, journeys_total - openBugs);
   return {
     state,
-    journeys_passed_count: data.journeys_passed_count ?? 0,
-    journeys_total: data.journeys_total ?? 0,
-    updated_at: data.updated_at ?? new Date().toISOString(),
+    journeys_passed_count,
+    journeys_total,
+    updated_at: new Date().toISOString(),
   };
+}
+
+// The status payload's `bugs` field may be a count, an array, or an object keyed
+// by severity/status. Sum whatever numeric leaves we can find; default to 0.
+function countBugs(bugs: unknown): number {
+  if (typeof bugs === "number") return bugs;
+  if (Array.isArray(bugs)) return bugs.length;
+  if (bugs && typeof bugs === "object") {
+    let sum = 0;
+    for (const v of Object.values(bugs as Record<string, unknown>)) {
+      if (typeof v === "number") sum += v;
+      else if (Array.isArray(v)) sum += v.length;
+    }
+    return sum;
+  }
+  return 0;
 }
 
 type LoopQaBugSummary = {
@@ -296,8 +332,18 @@ export async function getBugs(loop_qa_id: string): Promise<{ bugs: LoopQaBugSumm
       })),
     };
   }
-  const res = await loopQaFetch(`/projects/${loop_qa_id}/bugs`);
+  // Real API paginates under `items`; keep `bugs` as a fallback for fixtures.
+  const res = await loopQaFetch(`/projects/${loop_qa_id}/bugs?status=open&page=1&page_size=100`);
   const data = (await res.json()) as {
+    items?: Array<{
+      id: string;
+      severity: string;
+      title: string;
+      route?: string;
+      where?: string;
+      evidence_url?: string;
+      recording_url?: string;
+    }>;
     bugs?: Array<{
       id: string;
       severity: string;
@@ -309,7 +355,7 @@ export async function getBugs(loop_qa_id: string): Promise<{ bugs: LoopQaBugSumm
     }>;
   };
   return {
-    bugs: (data.bugs ?? []).map((b) => ({
+    bugs: (data.items ?? data.bugs ?? []).map((b) => ({
       id: b.id,
       severity: normalizeSeverity(b.severity),
       title: b.title,
@@ -352,9 +398,14 @@ export async function createExploration(
   regression_notes?: string,
 ): Promise<{ exploration_id: string }> {
   if (env.FIXTURE_MODE) return fixtureNewExploration(loop_qa_id);
+  // Real API expects a {prompt} body and returns {id}.
   const res = await loopQaFetch(`/projects/${loop_qa_id}/explorations`, {
     method: "POST",
-    body: JSON.stringify({ regression_notes }),
+    body: JSON.stringify({
+      prompt:
+        regression_notes ??
+        "Re-explore after code fixes; verify previously reported bugs are resolved.",
+    }),
   });
   const data = (await res.json()) as { id?: string; exploration_id?: string };
   const exploration_id = data.exploration_id ?? data.id;

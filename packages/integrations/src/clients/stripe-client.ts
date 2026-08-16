@@ -91,48 +91,59 @@ export async function createRealPaymentLink(
   const existing = state.projects[input.project_id];
   if (existing) return { url: existing.url, id: existing.payment_link_id };
 
-  const stripe = getStripe();
-  const product = await stripe.products.create({ name: input.product_name });
+  try {
+    const stripe = getStripe();
+    const product = await stripe.products.create({ name: input.product_name });
 
-  const priceParams: Stripe.PriceCreateParams =
-    input.amount_usd !== undefined
-      ? {
-          currency: env.STRIPE_CURRENCY,
-          unit_amount: Math.round(input.amount_usd * 100),
-          product: product.id,
-        }
-      : {
-          currency: env.STRIPE_CURRENCY,
-          custom_unit_amount: { enabled: true },
-          product: product.id,
-        };
-  const price = await stripe.prices.create(priceParams);
+    const priceParams: Stripe.PriceCreateParams =
+      input.amount_usd !== undefined
+        ? {
+            currency: env.STRIPE_CURRENCY,
+            unit_amount: Math.round(input.amount_usd * 100),
+            product: product.id,
+          }
+        : {
+            currency: env.STRIPE_CURRENCY,
+            custom_unit_amount: { enabled: true },
+            product: product.id,
+          };
+    const price = await stripe.prices.create(priceParams);
 
-  const link = await stripe.paymentLinks.create({
-    line_items: [
-      {
-        price: price.id,
-        quantity: input.amount_usd === undefined ? 1 : 1,
-        adjustable_quantity:
-          input.amount_usd === undefined ? undefined : { enabled: true, maximum: 5 },
-      },
-    ],
-    metadata: { project_id: input.project_id },
-  });
+    const link = await stripe.paymentLinks.create({
+      line_items: [
+        {
+          price: price.id,
+          quantity: input.amount_usd === undefined ? 1 : 1,
+          adjustable_quantity:
+            input.amount_usd === undefined ? undefined : { enabled: true, maximum: 5 },
+        },
+      ],
+      metadata: { project_id: input.project_id },
+    });
 
-  state.projects[input.project_id] = {
-    payment_link_id: link.id,
-    url: link.url,
-    product_id: product.id,
-    created_at: new Date().toISOString(),
-  };
-  saveState(state);
+    state.projects[input.project_id] = {
+      payment_link_id: link.id,
+      url: link.url,
+      product_id: product.id,
+      created_at: new Date().toISOString(),
+    };
+    saveState(state);
 
-  logger.info(
-    { project_id: input.project_id, id: link.id, key: maskLast4(env.STRIPE_RESTRICTED_KEY) },
-    "stripe payment link created",
-  );
-  return { url: link.url, id: link.id };
+    logger.info(
+      { project_id: input.project_id, id: link.id, key: maskLast4(env.STRIPE_RESTRICTED_KEY) },
+      "stripe payment link created",
+    );
+    return { url: link.url, id: link.id };
+  } catch (err) {
+    // Real link creation needs the rk_ key to have Products + Prices + Payment
+    // Links write. If any is missing, degrade to a fixture link so the demo's
+    // QR/checkout still renders instead of 502-ing.
+    logger.warn(
+      { err, project_id: input.project_id, key: maskLast4(env.STRIPE_RESTRICTED_KEY) },
+      "stripe real payment-link failed; using fixture link (grant rk key Products/Prices/PaymentLinks write to go real)",
+    );
+    return createFixturePaymentLink(input);
+  }
 }
 
 export type ChargeItem = {

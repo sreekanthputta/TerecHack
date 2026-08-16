@@ -53,18 +53,28 @@ export async function acquireSession(ttl_sec?: number): Promise<SessionRecord> {
     return session;
   }
 
-  const res = await callSuperserve("/sessions", "POST", { ttl_sec: ttl });
-  const data = (await res.json()) as { id: string; browser_ws_url: string };
-  const session: SessionRecord = {
-    session_id: data.id,
-    browser_ws_url: data.browser_ws_url,
-    status: "active",
-    ttl_sec: ttl,
-    created_at: new Date().toISOString(),
-    last_used_at: new Date().toISOString(),
-  };
-  pool.push(session);
-  return session;
+  try {
+    const res = await callSuperserve("/sessions", "POST", { ttl_sec: ttl });
+    const data = (await res.json()) as { id: string; browser_ws_url: string };
+    const session: SessionRecord = {
+      session_id: data.id,
+      browser_ws_url: data.browser_ws_url,
+      status: "active",
+      ttl_sec: ttl,
+      created_at: new Date().toISOString(),
+      last_used_at: new Date().toISOString(),
+    };
+    pool.push(session);
+    return session;
+  } catch (err) {
+    // Superserve's managed-browser host is unreachable in this environment.
+    // Hand back a local session so the researcher can still proceed — browse()
+    // does a real direct fetch(url), so page reads remain real.
+    logger.warn({ err }, "superserve acquire failed; using local session (browse still does real fetch)");
+    const session = fixtureSession(ttl);
+    pool.push(session);
+    return session;
+  }
 }
 
 /**

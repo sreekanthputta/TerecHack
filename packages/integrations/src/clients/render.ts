@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { env } from "../env.js";
@@ -68,74 +69,57 @@ async function renderFetch(path: string, init: RequestInit = {}): Promise<Respon
   });
 }
 
-async function findService(name: string): Promise<{ id: string; url: string } | null> {
-  const res = await renderFetch(`/services?name=${encodeURIComponent(name)}&limit=1`);
-  if (!res.ok) return null;
-  const data = (await res.json()) as
-    | Array<{ service: { id: string; serviceDetails?: { url?: string }; name: string } }>
-    | { services?: Array<{ id: string; serviceDetails?: { url?: string } }> };
-  const arr = Array.isArray(data) ? data.map((r) => r.service) : data.services ?? [];
-  const match = arr.find((s) => (s as { name?: string }).name === name) ?? arr[0];
-  if (!match) return null;
-  return { id: match.id, url: match.serviceDetails?.url ?? "" };
+function git(args: string[]): string {
+  return execFileSync("git", args, {
+    cwd: __dirname,
+    encoding: "utf8",
+    timeout: 60_000,
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
+  }).trim();
 }
 
+/**
+ * Real deploy: write the generated storefront into the git-backed Render static
+ * site's publish dir under a per-project path, commit just that file, and push.
+ * Render (autoDeploy on commit) publishes it. Each project gets a distinct,
+ * scannable URL at <RENDER_STATIC_SITE_URL>/p/<project_id>/. Falls back to a
+ * local file:// path if git/push is unavailable so the demo never 502s.
+ */
 export async function deployReal(input: DeployInput): Promise<DeployResult> {
   const s = state();
   try {
-    let entry = s.projects[input.project_id];
-    let service_id = entry?.service_id;
-    let url = entry?.url;
+    const root = git(["rev-parse", "--show-toplevel"]);
+    const rel = `${env.RENDER_STATIC_PUBLISH_DIR}/p/${input.project_id}/index.html`;
+    const dir = resolve(root, env.RENDER_STATIC_PUBLISH_DIR, "p", input.project_id);
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    writeFileSync(resolve(dir, "index.html"), input.html);
 
-    if (!service_id) {
-      const existing = await findService(input.name);
-      if (existing) {
-        service_id = existing.id;
-        url = existing.url;
-      } else {
-        const create = await renderFetch("/services", {
-          method: "POST",
-          body: JSON.stringify({
-            type: "static_site",
-            name: input.name,
-            ownerId: env.RENDER_OWNER_ID,
-            serviceDetails: { publishPath: "./" },
-            envVars: [],
-          }),
-        });
-        if (!create.ok) throw new Error(`render create failed ${create.status}`);
-        const created = (await create.json()) as {
-          service: { id: string; serviceDetails?: { url?: string } };
-        };
-        service_id = created.service.id;
-        url = created.service.serviceDetails?.url ?? "";
-      }
+    git(["-C", root, "add", "--", rel]);
+    // Path-scoped commit: touches only this file, leaves other working changes.
+    try {
+      git(["-C", root, "commit", "-m", `deploy: storefront for ${input.project_id}`, "--", rel]);
+    } catch {
+      // identical html → nothing to commit; still push in case an earlier
+      // deploy commit is unpushed.
     }
+    git(["-C", root, "push", "origin", env.RENDER_DEPLOY_BRANCH]);
+    const sha = git(["-C", root, "rev-parse", "HEAD"]).slice(0, 9);
 
-    // Trigger a deploy carrying the HTML as an inline commit via Render's
-    // trigger-deploy endpoint. In real setups Builder would push to a git repo;
-    // here we use the "workflows" trigger to keep the sponsor track.
-    const trigger = await renderFetch(`/services/${service_id}/deploys`, {
-      method: "POST",
-      body: JSON.stringify({ clearCache: "do_not_clear" }),
-    });
-    if (!trigger.ok) throw new Error(`render deploy trigger failed ${trigger.status}`);
-    const dep = (await trigger.json()) as { id: string };
-
+    const base = env.RENDER_STATIC_SITE_URL.replace(/\/$/, "");
+    const url = `${base}/p/${input.project_id}/`;
+    const deploy_id = `git_${sha}`;
     s.projects[input.project_id] = {
-      service_id,
-      url: url || `https://${input.name}.onrender.com`,
-      last_deploy_id: dep.id,
+      service_id: env.RENDER_STATIC_SITE_URL,
+      url,
+      last_deploy_id: deploy_id,
       updated_at: new Date().toISOString(),
     };
     save(s);
-    logger.info(
-      { project_id: input.project_id, deploy_id: dep.id, service_id },
-      "render deploy triggered",
-    );
-    return { url: s.projects[input.project_id]!.url, deploy_id: dep.id };
+    logger.info({ project_id: input.project_id, url, deploy_id }, "render deploy pushed to git");
+    return { url, deploy_id };
   } catch (err) {
-    logger.warn({ err, project_id: input.project_id }, "render deploy fell back to file://");
+    logger.warn({ err, project_id: input.project_id }, "render git deploy failed; file:// fallback");
     const fallback = writeLocalFallback(input.project_id, input.html);
     return { url: fallback, deploy_id: `local_${Date.now().toString(36)}` };
   }

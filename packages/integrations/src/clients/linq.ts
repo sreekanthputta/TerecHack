@@ -11,40 +11,31 @@ export type NotifyInput = {
 
 export type NotifyResult = { sid: string };
 
-const LINQ_ENDPOINT = "https://api.linq.dev/v1/messages";
+const LINQ_ENDPOINT = "https://api.linqapp.com/api/partner/v3/chats";
 
 export async function notifyReal(input: NotifyInput): Promise<NotifyResult> {
   if (!env.LINQ_API_KEY) throw new Error("LINQ_API_KEY not set");
-  const payload = input.requires_approval
-    ? {
-        to: env.LINQ_OWNER_PHONE,
-        recipient_name: env.LINQ_OWNER_NAME,
-        // iMessage App interactive card — tapback 👍/👎 replies to the webhook
-        type: "imessage.app_card",
-        card: {
-          title: `AutoBusiness · ${input.project_id}`,
-          body: input.message,
-          actions: [
-            { id: "approve", label: "👍 Approve", tapback: "up" },
-            { id: "reject", label: "👎 Reject", tapback: "down" },
-          ],
-          metadata: {
-            project_id: input.project_id,
-            requires_approval: true,
-          },
-        },
-      }
-    : {
-        to: env.LINQ_OWNER_PHONE,
-        recipient_name: env.LINQ_OWNER_NAME,
-        type: "imessage.text",
-        text: input.message,
-        metadata: { project_id: input.project_id },
-      };
+  if (!env.LINQ_OWNER_PHONE) throw new Error("LINQ_OWNER_PHONE not set");
+  if (!env.LINQ_FROM_NUMBER) throw new Error("LINQ_FROM_NUMBER not set");
+  const suffix = input.requires_approval
+    ? "\n\nReply 👍 to approve or 👎 to reject."
+    : "";
+  const payload = {
+    from: env.LINQ_FROM_NUMBER,
+    to: [env.LINQ_OWNER_PHONE],
+    message: {
+      parts: [{ type: "text", value: `${input.message}${suffix}` }],
+    },
+    metadata: {
+      project_id: input.project_id,
+      requires_approval: input.requires_approval ?? false,
+    },
+  };
 
   const res = await fetch(LINQ_ENDPOINT, {
     method: "POST",
     headers: {
+      accept: "application/json",
       "content-type": "application/json",
       authorization: `Bearer ${env.LINQ_API_KEY}`,
     },
@@ -54,9 +45,9 @@ export async function notifyReal(input: NotifyInput): Promise<NotifyResult> {
     const body = await res.text().catch(() => "");
     throw new Error(`linq notify failed ${res.status}: ${body.slice(0, 200)}`);
   }
-  const data = (await res.json()) as { sid?: string; id?: string };
-  const sid = data.sid ?? data.id;
-  if (!sid) throw new Error("linq response missing sid");
+  const data = (await res.json()) as { id?: string; sid?: string; chat_id?: string };
+  const sid = data.id ?? data.sid ?? data.chat_id;
+  if (!sid) throw new Error("linq response missing id");
   logger.info(
     { project_id: input.project_id, sid, key: maskLast4(env.LINQ_API_KEY) },
     "linq notify sent",
