@@ -153,6 +153,20 @@ export async function registerInternalRoutes(app: FastifyInstance, ctx: Ctx): Pr
     return { ok: true };
   });
 
+  app.get<{ Params: { turn_id: string } }>("/internal/turns/:turn_id/state", async (req, reply) => {
+    const turn = ctx.repo.getTurn(req.params.turn_id);
+    if (!turn) {
+      reply.code(404);
+      return { error: "unknown_turn" };
+    }
+    const bs = ctx.repo.getBusinessState(turn.project_id);
+    if (!bs) {
+      reply.code(404);
+      return { error: "no_state" };
+    }
+    return bs;
+  });
+
   app.post<{ Params: { turn_id: string } }>("/internal/turns/:turn_id/memory", async (req, reply) => {
     const turn = assertActiveTurn(reply, ctx.repo.getTurn(req.params.turn_id));
     if (!turn) return;

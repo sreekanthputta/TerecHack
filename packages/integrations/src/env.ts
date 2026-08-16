@@ -47,8 +47,8 @@ export const env = {
   // Real git-backed static site: generated storefronts are pushed here and
   // served per-project at <URL>/p/<project_id>/. Autodeploys on commit.
   RENDER_STATIC_SITE_URL:
-    process.env.RENDER_STATIC_SITE_URL ?? "https://autobusiness-mockups.onrender.com",
-  RENDER_STATIC_PUBLISH_DIR: process.env.RENDER_STATIC_PUBLISH_DIR ?? "mockups",
+    process.env.RENDER_STATIC_SITE_URL ?? "https://autobusiness-wagm.onrender.com",
+  RENDER_STATIC_PUBLISH_DIR: process.env.RENDER_STATIC_PUBLISH_DIR ?? "sites",
   RENDER_DEPLOY_BRANCH: process.env.RENDER_DEPLOY_BRANCH ?? "main",
 
   // Linq
